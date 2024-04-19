@@ -17,6 +17,7 @@ export default {
   wasOnExchange: 'wasOnExchange',
   isWalletCreate: 'isWalletCreate',
   lastCheckBalance: 'lastCheckBalance',
+  lastCheckCurrencyRate: 'lastCheckBalance',
   startSwap: 'startSwap',
   didProtectedBtcCreated: 'protectedBtcCreated',
   didPinBtcCreated: `${process.env.ENTRY}:pinBtcCreated`,

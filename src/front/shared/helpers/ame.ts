@@ -10,13 +10,9 @@ type EstimateFeeParams = {
   method: string
 }
 
-const estimateFeeValue = async (params: EstimateFeeParams) => {
-  return ethLikeHelper.ame.estimateFeeValue(params)
-}
+const estimateFeeValue = async (params: EstimateFeeParams) => ethLikeHelper.ame.estimateFeeValue(params)
 
-const estimateGasPrice = async (): Promise<number> => {
-  return ethLikeHelper.ame.estimateGasPrice()
-}
+const estimateGasPrice = async (): Promise<number> => ethLikeHelper.ame.estimateGasPrice()
 
 export default {
   estimateFeeValue,

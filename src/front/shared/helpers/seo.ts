@@ -6,14 +6,14 @@ const seo = {
     telegram: 'https://t.me/swaponline',
     email: 'info@swaponline.io',
     mainUrl: 'https://swaponline.io',
-    logo: 'https://wiki.swaponline.io/assets/swaponline_io.svg',
+    logo: 'https://ibb.co/rHZ1cXD',
   },
-  defaultTitle: 'Hot Wallet with Exchange',
+  defaultTitle: 'KAXAA eWallet',
   defaultDescription: 'Our online wallet with Atomic swap algorithms will help you store and exchange cryptocurrency instantly and more secure without third-parties. Decentralized exchange.',
   pages: [
     {
       uri: '/',
-      title: window.defaultWindowTitle || 'Hot Wallet with Exchange',
+      title: window.defaultWindowTitle || 'KAXAA eWallet',
       description: 'Our online wallet with Atomic swap algorithms will help you store and exchange' +
         ' cryptocurrency instantly and more secure without third-parties. Decentralized exchange.',
     },

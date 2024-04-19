@@ -46,8 +46,6 @@ class ethLikeHelper {
   }
 
   estimateGasPrice = async (): Promise<number> => {
-    if (this.defaultParams.price_fixed) return this.defaultParams.price_fixed
-
     let response
 
     try {
@@ -126,24 +124,9 @@ export default {
     defaultParams: DEFAULT_CURRENCY_PARAMETERS.evmLike,
     web3: new Web3(config.web3.ame_provider),
   }),
-  phi_v1: new ethLikeHelper({
-    currency: 'PHI_V1',
-    defaultParams: DEFAULT_CURRENCY_PARAMETERS.phi_v1,
-    web3: new Web3(config.web3.phi_v1_provider),
-  }),
   phi: new ethLikeHelper({
     currency: 'PHI',
     defaultParams: DEFAULT_CURRENCY_PARAMETERS.phi,
     web3: new Web3(config.web3.phi_provider),
-  }),
-  fkw: new ethLikeHelper({
-    currency: 'FKW',
-    defaultParams: DEFAULT_CURRENCY_PARAMETERS.fkw,
-    web3: new Web3(config.web3.fkw_provider),
-  }),
-  phpx: new ethLikeHelper({
-    currency: 'PHPX',
-    defaultParams: DEFAULT_CURRENCY_PARAMETERS.phpx,
-    web3: new Web3(config.web3.phpx_provider),
   }),
 }

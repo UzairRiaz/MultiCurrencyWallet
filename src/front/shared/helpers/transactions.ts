@@ -4,11 +4,11 @@ import helpers from 'helpers'
 import actions from 'redux/actions'
 
 const getTokenBaseCurrency = (tokenKey) => {
-  const baseCurrencyRegExp = /^\{[a-z1-2_]+\}/
+  const baseCurrencyRegExp = /^\{[a-z]+\}/
   const baseTokenCurrencyPrefix = tokenKey.match(baseCurrencyRegExp)
 
   if (baseTokenCurrencyPrefix) {
-    const baseTokenCurrency = baseTokenCurrencyPrefix[0].match(/[a-z1-2_]+/)
+    const baseTokenCurrency = baseTokenCurrencyPrefix[0].match(/[a-z]+/)
     const constantCurrency =
       baseTokenCurrency && BASE_TOKEN_CURRENCY[baseTokenCurrency[0].toUpperCase()]
 
@@ -26,6 +26,7 @@ const getTxRouter = (currency, txHash) => {
   }
 
   const prefix = helpers.getCurrencyKey(currency, false)
+
   if (actions[prefix]?.getTxRouter) {
     return actions[prefix].getTxRouter(txHash, currency.toLowerCase())
   }
@@ -76,18 +77,8 @@ const getLink = (currency, txHash) => {
     return actions.erc20aurora.getLinkToInfo(txHash)
   }
 
-  if (isToken('phi20_v1', currency)) {
-    return actions.phi20_v1.getLinkToInfo(txHash)
-  }
-
   if (isToken('phi20', currency)) {
     return actions.phi20.getLinkToInfo(txHash)
-  }
-  if (isToken('fkw20', currency)) {
-    return actions.fkw20.getLinkToInfo(txHash)
-  }
-  if (isToken('phpx20', currency)) {
-    return actions.phpx20.getLinkToInfo(txHash)
   }
 
   const prefix = helpers.getCurrencyKey(currency, false)
@@ -147,22 +138,9 @@ const getInfo = (currency, txRaw): GetInfoResult => {
     reduxAction = `erc20aurora`
   }
 
-  if (isToken('phi20_v1', currency)) {
-    reduxAction = `phi20_v1`
-  }
-
   if (isToken('phi20', currency)) {
     reduxAction = `phi20`
   }
-
-  if (isToken('fkw20', currency)) {
-    reduxAction = `fkw20`
-  }
-  
-  if (isToken('phpx20', currency)) {
-    reduxAction = `phpx20`
-  }
-  
 
   const info = {
     tx: '',

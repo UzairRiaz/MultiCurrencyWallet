@@ -1,6 +1,5 @@
 import config from 'app-config'
-import { util } from 'swap.app'
-import { constants } from 'swap.app'
+import { util, constants } from 'swap.app'
 import BigNumber from 'bignumber.js'
 import reducers from 'redux/core/reducers'
 import TOKEN_STANDARDS, { EXISTING_STANDARDS } from 'helpers/constants/TOKEN_STANDARDS'
@@ -28,64 +27,64 @@ const initExternalConfig = () => {
 
 const externalConfig = () => {
   // Reconfigure app config if it widget or use external config
-  if (config.opts && config.opts.inited) {
-    return config
-  }
+  // if (config.opts && config.opts.inited) {
+  //   return config
+  // }
 
   config.opts = {
     inited: true,
-    hasWalletConnect: true,
     curEnabled: {
-      eth: true,
+      eth: true, // setting it false also disable metamask connect.
       bnb: true,
       matic: true,
-      arbeth: true,
-      aureth: true,
-      xdai: true,
-      ftm: true,
+      kax: true,
+      usdc: true,
+      arbeth: false,
+      aureth: false,
+      xdai: false,
+      ftm: false,
       avax: true,
-      movr: true,
-      one: true,
-      ame: true,
-      phi_v1: true,
-      phi: true,
-      fkw: true,
-      phpx: true,
+      movr: false,
+      one: false,
+      ame: false,
+      phi: false,
       btc: true,
-      ghost: true,
+      ghost: false,
       next: false,
+      usdt: true,
+      doge: false,
     },
     blockchainSwapEnabled: {
       btc: true,
       eth: true,
       bnb: false,
-      matic: false,
+      matic: true,
+      usdc: true,
+      kax: true,
       arbeth: false,
       aureth: false,
       xdai: false,
       ftm: false,
-      avax: false,
+      avax: true,
       movr: false,
       one: false,
       ame: false,
-      phi_v1: false,
       phi: false,
-      fkw: false,
-      phpx: false,
-      ghost: true,
+      ghost: false,
       next: false,
+      usdt: true,
+      doge:false,
     },
     L2_EVM_KEYS: ['aureth', 'arbeth'],
     createWalletCoinsOrder: false,
     buyFiatSupported: ['eth', 'matic'],
     defaultExchangePair: {
-      buy: '{eth}wbtc',
-      sell: 'btc',
+      buy: 'kax',
+      sell: 'usdc',
     },
-    preventMultiTab: true,
     defaultQuickSell: false,
     ownTokens: false,
-    addCustomTokens: true,
+    addCustomTokens: false,
     invoiceEnabled: !config.isWidget,
     showWalletBanners: false,
     showHowItsWork: false,
@@ -105,7 +104,7 @@ const externalConfig = () => {
     exchangeDisabled: false,
     ui: {
       hideServiceLinks: false,
-      serviceLink: 'https://onout.org/wallet',
+      serviceLink: 'https://tools.onout.org/wallet',
       farmLink: false, // use default link #/marketmaker
       bannersSource: 'https://noxon.wpmix.net/swapBanners/banners.php',
       disableInternalWallet: false,
@@ -125,7 +124,7 @@ const externalConfig = () => {
             title: 'Faq title after',
             content: 'Faq content'
           }
-        */]
+        */],
       },
       menu: {
         before: [/*
@@ -134,28 +133,11 @@ const externalConfig = () => {
             "link": "https:\/\/google.com"
           }
         */],
-        after: []
+        after: [],
       },
     },
   }
 
-  // WalletConnect custom ProjectID 
-  if (window
-    && window.SO_WalletConnectProjectId
-  ) {
-    config.api.WalletConnectProjectId = window.SO_WalletConnectProjectId
-  }
-  if (window
-    && window.SO_WalletConnectDisabled
-  ) {
-    config.opts.hasWalletConnect = false
-  }
-
-  if (window
-    && window.SO_AllowMultiTab
-  ) {
-    config.opts.preventMultiTab = false
-  }
   if (window
     && window.SO_FaqBeforeTabs
     && window.SO_FaqBeforeTabs.length
@@ -259,42 +241,82 @@ const externalConfig = () => {
     config.opts.exchangeDisabled = window.EXCHANGE_DISABLED
   }
 
-
   // Plugin: enable/disable currencies
+
+  if (window && window.CUR_BTC_DISABLED === true) {
+    config.opts.curEnabled.btc = true
+    config.opts.blockchainSwapEnabled.btc = true
+  }
+
+  if (window && window.CUR_GHOST_DISABLED === true) {
+    config.opts.curEnabled.ghost = false
+    config.opts.blockchainSwapEnabled.ghost = false
+  }
+
   if (window && window.CUR_NEXT_DISABLED === false) {
     config.opts.curEnabled.next = true
     config.opts.blockchainSwapEnabled.next = true
   }
-  
-  const wpCurrencyDisabledFlages = {
-    /* WordPress window flag => option key */
-    CUR_BTC_DISABLED: `btc`,
-    CUR_GHOST_DISABLED: `ghost`,
-    CUR_ETH_DISABLED: `eth`,
-    CUR_BNB_DISABLED: `bnb`,
-    CUR_MATIC_DISABLED: `matic`,
-    CUR_ARBITRUM_DISABLED: `arbeth`,
-    CUR_XDAI_DISABLED: `xdai`,
-    CUR_FTM_DISABLED: `ftm`,
-    CUR_AVAX_DISABLED: `avax`,
-    CUR_MOVR_DISABLED: `movr`,
-    CUR_ONE_DISABLED: `one`,
-    CUR_AME_DISABLED: `ame`,
-    CUR_AURORA_DISABLED: `aureth`,
-    CUR_PHI_DISABLED: `phi_v1`,
-    CUR_PHI_V2_DISABLED: `phi`,
-    CUR_FKW_DISABLED: 'fkw',
-    CUR_PHPX_DISABLED: 'phpx',
-  }
-  if (window) {
-    Object.keys(wpCurrencyDisabledFlages).forEach((windowFlagKey) => {
-      if (window[windowFlagKey] === true) {
-        config.opts.curEnabled[wpCurrencyDisabledFlages[windowFlagKey]] = false
-        config.opts.blockchainSwapEnabled[wpCurrencyDisabledFlages[windowFlagKey]] = false
-      }
-    })
+
+  if (window && window.CUR_ETH_DISABLED === true) {
+    config.opts.curEnabled.eth = false
+    config.opts.blockchainSwapEnabled.next = false
   }
 
+  if (window && window.CUR_BNB_DISABLED === true) {
+    config.opts.curEnabled.bnb = false
+    config.opts.blockchainSwapEnabled.bnb = false
+  }
+
+  if (window && window.CUR_MATIC_DISABLED === true) {
+    config.opts.curEnabled.matic = false
+    config.opts.blockchainSwapEnabled.matic = false
+  }
+
+  if (window && window.CUR_ARBITRUM_DISABLED === true) {
+    config.opts.curEnabled.arbeth = false
+    config.opts.blockchainSwapEnabled.arbeth = false
+  }
+
+  if (window && window.CUR_XDAI_DISABLED === true) {
+    config.opts.curEnabled.xdai = false
+    config.opts.blockchainSwapEnabled.xdai = false
+  }
+
+  if (window && window.CUR_FTM_DISABLED === true) {
+    config.opts.curEnabled.ftm = false
+    config.opts.blockchainSwapEnabled.ftm = false
+  }
+
+  if (window && window.CUR_AVAX_DISABLED === true) {
+    config.opts.curEnabled.avax = false
+    config.opts.blockchainSwapEnabled.avax = false
+  }
+
+  if (window && window.CUR_MOVR_DISABLED === true) {
+    config.opts.curEnabled.movr = false
+    config.opts.blockchainSwapEnabled.movr = false
+  }
+
+  if (window && window.CUR_ONE_DISABLED === true) {
+    config.opts.curEnabled.one = false
+    config.opts.blockchainSwapEnabled.one = false
+  }
+
+  if (window && window.CUR_AME_DISABLED === true) {
+    config.opts.curEnabled.ame = false
+    config.opts.blockchainSwapEnabled.ame = false
+  }
+
+  if (window && window.CUR_AURORA_DISABLED === true) {
+    config.opts.curEnabled.aureth = false
+    config.opts.blockchainSwapEnabled.aureth = false
+  }
+
+  if (window && window.CUR_PHI_DISABLED === true) {
+    config.opts.curEnabled.phi = false
+    config.opts.blockchainSwapEnabled.phi = false
+  }
 
   config.enabledEvmNetworks = Object.keys(config.evmNetworks)
     .filter((key) => !config.opts.curEnabled || config.opts.curEnabled[key.toLowerCase()])
@@ -305,7 +327,7 @@ const externalConfig = () => {
     }, {})
 
   config.enabledEvmNetworkVersions = Object.values(config.enabledEvmNetworks).map(
-    (info: { networkVersion: number }) => info.networkVersion
+    (info: { networkVersion: number }) => info.networkVersion,
   )
 
   // Plugins
@@ -396,7 +418,7 @@ const externalConfig = () => {
             address: tokenObj.address,
             decimals: tokenObj.decimals,
             fullName: tokenObj.symbol,
-            canSwap: true
+            canSwap: true,
           }
         }
       })

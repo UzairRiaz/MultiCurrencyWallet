@@ -4,7 +4,7 @@ import CSSModules from 'react-css-modules'
 import styles from './styles.scss'
 
 import { FormattedMessage } from 'react-intl'
-import { QrReader } from 'react-qr-reader'
+import QrReader from 'react-qr-scanner'
 
 /* eslint-disable */
 const QR = ({ openScan, handleScan, handleError }) => (
@@ -13,13 +13,11 @@ const QR = ({ openScan, handleScan, handleError }) => (
       &times;
     </span>
     <QrReader
-      constraints={{ facingMode: { exact: 'environment' } }}
-      onResult={(result, error) => {
-        if (!!result) {
-          handleScan(result?.getText())
-          return
-        }
-      }}
+      delay={10}
+      facingMode="rear"
+      onError={handleError}
+      onScan={handleScan}
+      style={{ width: '100%' }}
     />
   </div>
 )

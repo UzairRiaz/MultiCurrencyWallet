@@ -3,7 +3,7 @@ import TOKEN_STANDARDS, { EXISTING_STANDARDS } from 'helpers/constants/TOKEN_STA
 import { BLOCKCHAIN as BLOCKCHAIN_TYPE } from 'swap.app/constants/COINS'
 
 const getCustomTokenConfig = () => {
-  let tokensInfo = JSON.parse(localStorage.getItem('customToken') || 'false')
+  const tokensInfo = JSON.parse(localStorage.getItem('customToken') || 'false')
 
   if (!tokensInfo || !tokensInfo[config.entry]) return {}
 
@@ -94,6 +94,13 @@ EXISTING_STANDARDS.forEach((standard) => {
 })
 
 const baseCurrencyConfig = {
+  KAX: {
+    name: 'KAX',
+    title: 'KAX',
+    icon: 'kax',
+    value: '{matic}kaxaa',
+    fullTitle: 'kaxaa',
+  },
   ETH: {
     name: 'ETH',
     title: 'ETH',
@@ -171,33 +178,12 @@ const baseCurrencyConfig = {
     value: 'ame',
     fullTitle: 'ame',
   },
-  PHI_V1: {
-    name: 'PHI_V1',
-    title: 'PHI_V1',
-    icon: 'phi_v1',
-    value: 'phi_v1',
-    fullTitle: 'phi_v1',
-  },
   PHI: {
     name: 'PHI',
     title: 'PHI',
     icon: 'phi',
     value: 'phi',
     fullTitle: 'phi',
-  },
-  FKW: {
-    name: 'FKW',
-    title: 'FKW',
-    icon: 'fkw',
-    value: 'fkw',
-    fullTitle: 'fkw',
-  },
-  PHPX: {
-    name: 'PHPX',
-    title: 'PHPX',
-    icon: 'phpx',
-    value: 'phpx',
-    fullTitle: 'phpx',
   },
   GHOST: {
     name: 'GHOST',
@@ -220,6 +206,27 @@ const baseCurrencyConfig = {
     value: 'btc',
     fullTitle: 'bitcoin',
   },
+  USDC: {
+    name: 'USDC',
+    title: 'USDC',
+    icon: 'usdc',
+    value: '{matic}usdc',
+    fullTitle: 'USD Coin',
+  },
+  USDT: {
+    name: 'USDT',
+    title: 'USDT',
+    icon: 'usdt',
+    value: '{matic}usdt',
+    fullTitle: 'USDT',
+  },
+  DOGE: {
+    name: 'DOGE',
+    title: 'DOGE',
+    icon: 'doge',
+    value: '{BNB}doge',
+    fullTitle: 'DOGE',
+  },
 }
 
 const initialState = {
@@ -229,12 +236,12 @@ const initialState = {
       blockchain: BLOCKCHAIN_TYPE.ETH,
       addAssets: true,
     }] : [],
-     ...(!buildOpts.curEnabled || buildOpts.curEnabled.bnb) ? [{
+    ...(!buildOpts.curEnabled || buildOpts.curEnabled.bnb) ? [{
       ...baseCurrencyConfig.BNB,
       blockchain: BLOCKCHAIN_TYPE.BNB,
       addAssets: true,
     }] : [],
-      ...(!buildOpts.curEnabled || buildOpts.curEnabled.matic) ? [{
+    ...(!buildOpts.curEnabled || buildOpts.curEnabled.matic) ? [{
       ...baseCurrencyConfig.MATIC,
       blockchain: BLOCKCHAIN_TYPE.MATIC,
       addAssets: true,
@@ -274,24 +281,9 @@ const initialState = {
       blockchain: BLOCKCHAIN_TYPE.ONE,
       addAssets: true,
     }] : [],
-    ...(!buildOpts.curEnabled || buildOpts.curEnabled.phi_v1) ? [{
-      ...baseCurrencyConfig.PHI_V1,
-      blockchain: BLOCKCHAIN_TYPE.PHI_V1,
-      addAssets: true,
-    }] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.phi) ? [{
       ...baseCurrencyConfig.PHI,
       blockchain: BLOCKCHAIN_TYPE.PHI,
-      addAssets: true,
-    }] : [],
-    ...(!buildOpts.curEnabled || buildOpts.curEnabled.fkw) ? [{
-      ...baseCurrencyConfig.FKW,
-      blockchain: BLOCKCHAIN_TYPE.FKW,
-      addAssets: true,
-    }] : [],
-    ...(!buildOpts.curEnabled || buildOpts.curEnabled.phpx) ? [{
-      ...baseCurrencyConfig.PHPX,
-      blockchain: BLOCKCHAIN_TYPE.PHPX,
       addAssets: true,
     }] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.ame) ? [{
@@ -347,6 +339,9 @@ const initialState = {
     ...tokenItems,
   ],
   partialItems: [
+    baseCurrencyConfig.USDC,
+    ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.kax) ? [baseCurrencyConfig.KAX] : [],
+    ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.usdc) ? [baseCurrencyConfig.USDC] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.eth) ? [baseCurrencyConfig.ETH] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.bnb) ? [baseCurrencyConfig.BNB] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.matic) ? [baseCurrencyConfig.MATIC] : [],
@@ -357,14 +352,13 @@ const initialState = {
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.avax) ? [baseCurrencyConfig.AVAX] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.movr) ? [baseCurrencyConfig.MOVR] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.one) ? [baseCurrencyConfig.ONE] : [],
-    ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.phi_v1) ? [baseCurrencyConfig.PHI_V1] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.phi) ? [baseCurrencyConfig.PHI] : [],
-    ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.fkw) ? [baseCurrencyConfig.FKW] : [],
-    ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.phpx) ? [baseCurrencyConfig.PHPX] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.ame) ? [baseCurrencyConfig.AME] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.ghost) ? [baseCurrencyConfig.GHOST] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.next) ? [baseCurrencyConfig.NEXT] : [],
     ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.btc) ? [baseCurrencyConfig.BTC] : [],
+    ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.usdt) ? [baseCurrencyConfig.USDT] : [],
+    ...(!buildOpts.blockchainSwapEnabled || buildOpts.blockchainSwapEnabled.doge) ? [baseCurrencyConfig.DOGE] : [],
     ...tokenPartialItems,
   ],
   addSelectedItems: [],
@@ -373,6 +367,8 @@ const initialState = {
 
 if (config.isWidget) {
   initialState.items = [
+    ...(!buildOpts.curEnabled || buildOpts.curEnabled.usdc) ? [baseCurrencyConfig.USDC] : [],
+    ...(!buildOpts.curEnabled || buildOpts.curEnabled.kax) ? [baseCurrencyConfig.KAX] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.eth) ? [baseCurrencyConfig.ETH] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.bnb) ? [baseCurrencyConfig.BNB] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.matic) ? [baseCurrencyConfig.MATIC] : [],
@@ -383,14 +379,14 @@ if (config.isWidget) {
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.avax) ? [baseCurrencyConfig.AVAX] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.movr) ? [baseCurrencyConfig.MOVR] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.one) ? [baseCurrencyConfig.ONE] : [],
-    ...(!buildOpts.curEnabled || buildOpts.curEnabled.phi_v1) ? [baseCurrencyConfig.PHI_V1] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.phi) ? [baseCurrencyConfig.PHI] : [],
-    ...(!buildOpts.curEnabled || buildOpts.curEnabled.fkw) ? [baseCurrencyConfig.FKW] : [],
-    ...(!buildOpts.curEnabled || buildOpts.curEnabled.phpx) ? [baseCurrencyConfig.PHPX] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.ame) ? [baseCurrencyConfig.AME] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.btc) ? [baseCurrencyConfig.BTC] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.ghost) ? [baseCurrencyConfig.GHOST] : [],
     ...(!buildOpts.curEnabled || buildOpts.curEnabled.next) ? [baseCurrencyConfig.NEXT] : [],
+    ...(!buildOpts.curEnabled || buildOpts.curEnabled.usdt) ? [baseCurrencyConfig.USDT] : [],
+    ...(!buildOpts.curEnabled || buildOpts.curEnabled.doge) ? [baseCurrencyConfig.DOGE] : [],
+
   ]
   // leave only coins
   initialState.partialItems = initialState.partialItems.filter((item) => !item.standard)
@@ -429,15 +425,15 @@ if (config.isWidget) {
         standard,
       })
       initialState.addSelectedItems.push({
-        //@ts-ignore
+        // @ts-ignore
         name: name.toUpperCase(),
-        //@ts-ignore
+        // @ts-ignore
         title: name.toUpperCase(),
-        //@ts-ignore
+        // @ts-ignore
         icon: name,
-        //@ts-ignore
+        // @ts-ignore
         value: name,
-        //@ts-ignore
+        // @ts-ignore
         fullTitle: fullName || name,
       })
     })
@@ -448,8 +444,7 @@ if (buildOpts.addCustomTokens) {
   const customTokenConfig = getCustomTokenConfig()
 
   Object.keys(customTokenConfig).forEach((standard) => {
-    const tokensAreAvailable =
-      TOKEN_STANDARDS[standard] && Object.keys(customTokenConfig[standard]).length
+    const tokensAreAvailable =      TOKEN_STANDARDS[standard] && Object.keys(customTokenConfig[standard]).length
 
     if (tokensAreAvailable) {
       const baseCurrency = TOKEN_STANDARDS[standard]?.currency

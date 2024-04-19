@@ -6,10 +6,7 @@ import bnb from './bnb'
 import matic from './matic'
 import arbeth from './arbeth'
 import aureth from './aureth'
-import phi_v1 from './phi'
-import phi from './phi_v2'
-import fkw from './fkw'
-import phpx from './phpx'
+import phi from './phi'
 import xdai from './xdai'
 import ftm from './ftm'
 import avax from './avax'
@@ -67,10 +64,7 @@ export default {
   matic,
   arbeth,
   aureth,
-  phi_v1,
   phi,
-  fkw,
-  phpx,
   xdai,
   ftm,
   avax,

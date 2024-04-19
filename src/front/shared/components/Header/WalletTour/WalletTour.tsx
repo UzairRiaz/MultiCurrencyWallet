@@ -13,7 +13,7 @@ export default class WalletTour extends Component<any, any> {
 
     /* eslint-disable */
     this.state = {
-      run: true,
+      run: false,
       steps: [
         {
           content: <FormattedMessage
@@ -72,7 +72,9 @@ export default class WalletTour extends Component<any, any> {
 
   render() {
     const { run, steps } = this.state
-    const { closeTour, isTourOpen } = this.props
+    // const { closeTour, isTourOpen } = this.props
+    const { closeTour } = this.props
+    const isTourOpen = false
     return (
       <div className="demo-wrapper">
         {isTourOpen && <Joyride

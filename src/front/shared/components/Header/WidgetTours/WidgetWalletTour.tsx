@@ -5,7 +5,6 @@ import Joyride, { STATUS } from 'react-joyride'
 import { FormattedMessage } from 'react-intl'
 import Tooltip from 'components/TourWindow'
 
-
 export class WidgetWalletTour extends Component<any, any> {
 
   constructor(props) {
@@ -13,7 +12,7 @@ export class WidgetWalletTour extends Component<any, any> {
 
     /* eslint-disable */
     this.state = {
-      run: true,
+      run: false,
       steps: [
         {
           content: <FormattedMessage
@@ -90,31 +89,35 @@ export class WidgetWalletTour extends Component<any, any> {
     if (finishedStatuses.includes(status)) {
       this.setState({ run: false })
     }
-  };
+  }
 
   render() {
     const { run, steps } = this.state
-    const { closeTour, isTourOpen } = this.props
+    // const { closeTour, isTourOpen } = this.props
+    const { closeTour } = this.props
+    const isTourOpen = false
     return (
       <div className="demo-wrapper">
-        {isTourOpen && <Joyride
-          callback={this.handleJoyrideCallback}
-          continuous
-          run={run}
-          scrollToFirstStep
-          tooltipComponent={(props) => <Tooltip closeTour={closeTour} {...props} />}
-          showProgress
-          showSkipButton
-          steps={steps}
-          styles={{
-            options: {
-              zIndex: 10000,
-              arrowColor: '#302272',
-              width: 300
-            },
-          }}
-        />}
+        {isTourOpen && (
+          <Joyride
+            callback={this.handleJoyrideCallback}
+            continuous
+            run={run}
+            scrollToFirstStep
+            tooltipComponent={(props) => <Tooltip closeTour={closeTour} {...props} />}
+            showProgress
+            showSkipButton
+            steps={steps}
+            styles={{
+              options: {
+                zIndex: 10000,
+                arrowColor: '#302272',
+                width: 300,
+              },
+            }}
+          />
+        )}
       </div>
-    );
+    )
   }
 }

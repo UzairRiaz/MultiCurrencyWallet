@@ -1,46 +1,31 @@
-import { PureComponent } from 'react'
-import { connect } from 'redaction'
-import { BigNumber } from 'bignumber.js'
-import { FormattedMessage } from 'react-intl'
+import {PureComponent} from 'react'
+import {connect} from 'redaction'
+import {BigNumber} from 'bignumber.js'
+import {FormattedMessage} from 'react-intl'
 import CSSModules from 'react-css-modules'
 import getCoinInfo from 'common/coins/getCoinInfo'
 import utils from 'common/utils'
 import erc20Like from 'common/erc20Like'
-import { EVM_COIN_ADDRESS, ZERO_ADDRESS } from 'common/helpers/constants/ADDRESSES'
+import {EVM_COIN_ADDRESS, ZERO_ADDRESS} from 'common/helpers/constants/ADDRESSES'
 import {
   apiLooper,
-  externalConfig,
-  constants,
-  localStorage,
-  metamask,
-  links,
-  user,
   cacheStorageGet,
   cacheStorageSet,
+  constants,
+  externalConfig,
+  links,
+  localStorage,
+  metamask,
   quickswap,
+  user,
 } from 'helpers'
-import { localisedUrl } from 'helpers/locale'
+import {localisedUrl} from 'helpers/locale'
 import actions from 'redux/actions'
 import Link from 'local_modules/sw-valuelink'
-import {
-  ComponentState,
-  Direction,
-  BlockReasons,
-  Sections,
-  Actions,
-  CurrencyMenuItem,
-} from './types'
-import {
-  API_NAME,
-  GWEI_DECIMALS,
-  COIN_DECIMALS,
-  API_GAS_LIMITS,
-  MAX_PERCENT,
-  LIQUIDITY_SOURCE_DATA,
-} from './constants'
+import {Actions, BlockReasons, ComponentState, CurrencyMenuItem, Direction, Sections,} from './types'
+import {API_GAS_LIMITS, API_NAME, COIN_DECIMALS, GWEI_DECIMALS, LIQUIDITY_SOURCE_DATA, MAX_PERCENT,} from './constants'
 
 import styles from './index.scss'
-import TokenInstruction from './TokenInstruction'
 import Header from './Header'
 import InputForm from './InputForm'
 import SourceActions from './SourceActions'
@@ -70,7 +55,7 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
     const { match, activeFiat, allCurrencies, history } = props
     const { params, path } = match
 
-    const mode = QuickswapModes[window.quickswapMode]
+    const mode = QuickswapModes[window.quickswapMode] ?? 'only_aggregator'
     let onlyAggregator = false
     let onlySource = false
     let activeSection
@@ -204,7 +189,7 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
     const { metamaskData, availableBlockchains } = this.props
     const { metamaskData: prevMetamaskData } = prevProps
     const { wrongNetwork: prevWrongNetwork, activeSection: prevActiveSection } = prevState
-    const { blockReason, currencies, spendedCurrency, activeSection, wrongNetwork: curWrongNetwork } = this.state
+    const { blockReason, currencies, spendedCurrency, activeSection } = this.state
 
     const chainId = metamask.getChainId()
     const isCurrentNetworkAvailable = !!availableBlockchains[chainId]
@@ -212,7 +197,6 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
     const switchToCorrectNetwork = prevWrongNetwork
       && (isSpendedCurrencyNetworkAvailable || isCurrentNetworkAvailable)
     const switchToWrongNetwork = !prevWrongNetwork && !isSpendedCurrencyNetworkAvailable
-    const switchFromWrongToWrong = prevWrongNetwork && curWrongNetwork
     const disconnect = prevMetamaskData.isConnected && !metamaskData.isConnected
 
     let needFullUpdate = (
@@ -220,18 +204,13 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
       || (
         metamaskData.isConnected
         && (
-          (
-            (
-              switchToCorrectNetwork
-              || switchToWrongNetwork
-            ) && !switchFromWrongToWrong
-          )
+          switchToCorrectNetwork
+          || switchToWrongNetwork
           || prevMetamaskData.address !== metamaskData.address
         )
       )
     )
 
-    //console.log('>>> need full up', needFullUpdate, switchToCorrectNetwork, switchToWrongNetwork, switchFromWrongToWrong)
     const changeSection = activeSection !== prevActiveSection
 
     if (changeSection) {
@@ -318,6 +297,10 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
       })
     }
 
+    currencies = currencies.filter((currency)=>{
+      return ['{MATIC}kaxaa', '{MATIC}usdc', '{MATIC}matic'].includes(currency?.value)
+    })
+
     if (!currencies.length) {
       currencies = filteredCurrencies.length ? filteredCurrencies : [ CURRENCY_PLUG ]
     }
@@ -350,8 +333,6 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
       && window.zeroxFeePercent >= 0
       && window.zeroxFeePercent <= 100
 
-    // Если клиент уже установил больше 1% - используем принудительно 1%
-    if (window.zeroxFeePercent > 1) window.zeroxFeePercent = 1
     if (currentFeeOpts?.address && correctFeeRepresentation) {
       // percent of the buyAmount >= 0 && <= 1
       const apiPercentFormat = new BigNumber(window.zeroxFeePercent).dividedBy(MAX_PERCENT)
@@ -476,7 +457,6 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
     const possibleNoLiquidity = JSON.stringify(error)?.match(/INSUFFICIENT_ASSET_LIQUIDITY/)
     const insufficientSlippage = JSON.stringify(error)?.match(/IncompleteTransformERC20Error/)
     const notEnoughBalance = error.message?.match(/(N|n)ot enough .* balance/)
-    const notApproved = JSON.stringify(error)?.match(/SenderNotAuthorizedError/)
 
     if (possibleNoLiquidity) {
       this.setBlockReason(BlockReasons.NoLiquidity)
@@ -486,8 +466,6 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
       this.setBlockReason(BlockReasons.NoBalance)
     } else if (liquidityErrorMessage) {
       this.setBlockReason(BlockReasons.Liquidity)
-    } else if (notApproved) {
-      this.setBlockReason(BlockReasons.NotApproved)
     } else {
       this.setBlockReason(BlockReasons.Unknown)
 
@@ -502,11 +480,19 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
     }))
   }
 
+  getContractAddressForQuickSwap = (wallet: IUniversalObj) => {
+    let finalAddress = wallet?.contractAddress || EVM_COIN_ADDRESS
+    if (finalAddress === '0x0000000000000000000000000000000000001010') {
+      finalAddress = EVM_COIN_ADDRESS
+    }
+    return finalAddress
+  }
+
   createSwapRequest = (skipValidation = false) => {
     const { slippage, spendedAmount, fromWallet, toWallet, serviceFee } = this.state
 
-    const sellToken = fromWallet?.contractAddress || EVM_COIN_ADDRESS
-    const buyToken = toWallet?.contractAddress || EVM_COIN_ADDRESS
+    const sellToken = this.getContractAddressForQuickSwap(fromWallet)
+    const buyToken = this.getContractAddressForQuickSwap(toWallet)
 
     const sellAmount = utils.amount.formatWithDecimals(
       spendedAmount,
@@ -552,9 +538,10 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
   }
 
   onInputDataChange = async () => {
-    const { activeSection, sourceAction, currentLiquidityPair } = this.state
+    let { activeSection, sourceAction, currentLiquidityPair } = this.state
 
     await this.updateCurrentPairAddress()
+
     await this.checkApprove(Direction.Spend)
 
     if (
@@ -568,6 +555,11 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
     this.setState(() => ({
       error: null,
     }))
+
+    if (this.state.needApproveA || this.state.needApproveB) {
+      activeSection = Sections.Source
+      sourceAction = Actions.Swap
+    }
 
     if (activeSection === Sections.Aggregator) {
       await this.fetchSwapAPIData()
@@ -686,10 +678,11 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
     }
   }
 
+
   updateCurrentPairAddress = async () => {
     const { network, baseChainWallet, fromWallet, toWallet } = this.state
-    const tokenA = fromWallet?.contractAddress || EVM_COIN_ADDRESS
-    const tokenB = toWallet?.contractAddress || EVM_COIN_ADDRESS
+    const tokenA = this.getContractAddressForQuickSwap(fromWallet)
+    const tokenB = this.getContractAddressForQuickSwap(toWallet)
 
     let pairAddress = cacheStorageGet(
       'quickswapLiquidityPair',
@@ -740,8 +733,8 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
   fetchAmountOut = async () => {
     const { network, baseChainWallet, spendedAmount, fromWallet, toWallet } = this.state
 
-    const tokenA = fromWallet.contractAddress ?? EVM_COIN_ADDRESS
-    const tokenB = toWallet.contractAddress ?? EVM_COIN_ADDRESS
+    const tokenA = this.getContractAddressForQuickSwap(fromWallet)
+    const tokenB = this.getContractAddressForQuickSwap(toWallet)
 
     this.setPending(true)
 
@@ -835,14 +828,14 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
     if (!wallet.isToken) {
       this.setNeedApprove(direction, false)
     } else {
-      const { standard, address, contractAddress, decimals } = wallet
+      const { standard, address, decimals } = wallet
+      const contractAddress = this.getContractAddressForQuickSwap(wallet)
       const allowance = await erc20Like[standard].checkAllowance({
         contract: contractAddress,
         owner: address,
         decimals,
         spender,
       })
-
       if (amount) {
         this.setNeedApprove(direction, new BigNumber(amount).isGreaterThan(allowance))
       }
@@ -1029,7 +1022,6 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
 
   setAction = (type) => {
     this.resetSwapData()
-
     this.setState(() => ({
       spendedAmount: '',
       sourceAction: type,
@@ -1140,10 +1132,9 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
 
     const insufficientBalanceB = new BigNumber(toWallet.balance).isEqualTo(0)
       || new BigNumber(receivedAmount).isGreaterThan(toWallet.balance)
-
     return (
       <>
-        {onlyAggregator && <TokenInstruction />}
+        {/*{onlyAggregator && <TokenInstruction />}*/}
 
         {spendedCurrency.notExist || receivedCurrency.notExist && (
           <p styleName="noAssetsNotice">
@@ -1169,6 +1160,7 @@ class QuickSwap extends PureComponent<IUniversalObj, ComponentState> {
             openSourceSection={this.openSourceSection}
             openSettingsSection={this.openSettingsSection}
           />
+
           {activeSection === Sections.Settings ? (
             <Settings
               isSourceMode={isSourceMode}

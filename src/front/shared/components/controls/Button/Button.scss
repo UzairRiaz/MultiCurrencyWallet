@@ -64,8 +64,9 @@
 }
 
 .big {
-  height: 68px;
-  min-height: 68px;
+  height: 54px;
+  min-height: 54px;
+  font-size: 15px; font-weight: 500;
 }
 
 .brand {
@@ -81,6 +82,15 @@
   background-color: var(--color-brand);
   color: #fff;
   font-size: 15px;
+  border-radius: 0.2em;
+  -webkit-border-radius: 0.2em;
+  -moz-border-radius: 0.2em;
+  -ms-border-radius: 0.2em;
+  -o-border-radius: 0.2em;
+
+  &:hover {
+    background-color: var(--color-brand-hover);
+  }
 }
 
 .empty {
@@ -118,7 +128,7 @@
 
 .disabled {
   filter: grayscale(1);
-  opacity: 0.25;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 

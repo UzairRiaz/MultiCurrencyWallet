@@ -162,7 +162,7 @@ class WallerSlider extends React.Component<WallerSliderProps, WallerSliderState>
 
   handleShowMnemonic = () => {
     //@ts-ignore: strictNullChecks
-    actions.modals.open(constants.modals.SaveWalletSelectMethod, {
+    actions.modals.open(constants.modals.SaveMnemonicModal, {
       onClose: () => {
         const mnemonic = localStorage.getItem(constants.privateKeyNames.twentywords)
         const mnemonicDeleted = mnemonic === '-'
@@ -223,6 +223,7 @@ class WallerSlider extends React.Component<WallerSliderProps, WallerSliderState>
                 <div className="swiper-slide">
                   <NotifyBlock
                     className="notifyBlockSaveKeys"
+                    background="6144e5"
                     icon={security}
                     text={
                       <FormattedMessage

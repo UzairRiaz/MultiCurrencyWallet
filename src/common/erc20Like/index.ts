@@ -9,6 +9,7 @@ import ethLikeHelper from 'common/helpers/ethLikeHelper'
 import utils from 'common/utils'
 import { feedback, metamask } from 'helpers'
 import getCoinInfo from 'common/coins/getCoinInfo'
+import {EVM_COIN_ADDRESS} from "common/helpers/constants/ADDRESSES";
 
 
 class erc20LikeHelper {
@@ -91,12 +92,17 @@ class erc20LikeHelper {
   }): Promise<number> => {
     const { owner, spender, contract, decimals } = params
     const Web3 = this.getCurrentWeb3()
+
+    // in case of matic, don't call allowance api as it throw error
+    // and just return a large amount of money as allowed money
+    if (contract === EVM_COIN_ADDRESS) {
+      return 9999999999
+    }
     const tokenContract = new Web3.eth.Contract(TokenAbi, contract, {
       from: owner,
     })
 
     let allowanceAmount = 0
-
     try {
       allowanceAmount = await tokenContract.methods.allowance(owner, spender).call({ from: owner })
       allowanceAmount = new BigNumber(
@@ -205,28 +211,10 @@ export default {
     defaultParams: DEFAULT_CURRENCY_PARAMETERS.evmLikeToken,
     web3: new Web3(providers.ame_provider),
   }),
-  phi20_v1: new erc20LikeHelper({
-    standard: 'phi20_v1',
-    currency: 'phi_v1',
-    defaultParams: DEFAULT_CURRENCY_PARAMETERS.evmLikeToken,
-    web3: new Web3(providers.phi_provider),
-  }),
   phi20: new erc20LikeHelper({
     standard: 'phi20',
     currency: 'phi',
     defaultParams: DEFAULT_CURRENCY_PARAMETERS.evmLikeToken,
     web3: new Web3(providers.phi_provider),
-  }),
-  fkw20: new erc20LikeHelper({
-    standard: 'fkw20',
-    currency: 'fkw',
-    defaultParams: DEFAULT_CURRENCY_PARAMETERS.evmLikeToken,
-    web3: new Web3(providers.fkw_provider),
-  }),
-  phpx20: new erc20LikeHelper({
-    standard: 'phpx20',
-    currency: 'phpx',
-    defaultParams: DEFAULT_CURRENCY_PARAMETERS.evmLikeToken,
-    web3: new Web3(providers.phpx_provider),
   }),
 }

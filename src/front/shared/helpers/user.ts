@@ -2,41 +2,6 @@ import store from 'redux/store'
 import { externalConfig, links, getItezUrl } from 'helpers'
 import TOKEN_STANDARDS, { EXISTING_STANDARDS } from 'helpers/constants/TOKEN_STANDARDS'
 
-export const SUPPORTED_RAMP_ASSETS = {
-  BTC: 'BTC_BTC',
-
-  ETH: 'ETH_ETH',
-  '{ETH}BAT': 'ETH_BAT',
-  '{ETH}DAI': 'ETH_DAI',
-  '{ETH}ENS': 'ETH_ENS',
-  '{ETH}FEVR': 'ETH_FEVR',
-  '{ETH}LINK': 'ETH_LINK',
-  '{ETH}MANA': 'ETH_MANA',
-  '{ETH}RLY': 'ETH_RLY',
-  '{ETH}SAND': 'ETH_SAND',
-  '{ETH}USDC': 'ETH_USDC',
-  '{ETH}USDT': 'ETH_USDT',
-
-  BNB: 'BSC_BNB',
-  '{BNB}USDT': 'BSC_BUSD',
-  '{BNB}FEVR': 'BSC_FEVR',
-
-  MATIC: 'MATIC_MATIC',
-  '{MATIC}ETH': 'MATIC_ETH',
-  '{MATIC}MANA': 'MATIC_MANA',
-  '{MATIC}BAT': 'MATIC_BAT',
-  '{MATIC}DAI': 'MATIC_DAI',
-  '{MATIC}OVR': 'MATIC_OVR',
-  '{MATIC}SAND': 'MATIC_SAND',
-  '{MATIC}USDC': 'MATIC_USDC',
-
-  ARBETH: 'ARBITRUM_ETH',
-  XDAI: 'XDAI_XDAI',
-  AVAX: 'AVAX_AVAX',
-  '{AVAX}USDC': 'AVAX_USDC',
-  ONE: 'HARMONY_ONE',
-}
-
 const getEnabledEvmCurrencies = () => Object.keys(externalConfig.enabledEvmNetworks)
 
 export const getActivatedCurrencies = () => {
@@ -103,25 +68,32 @@ export const getWidgetCurrencies = () => {
   return widgetCurrencies
 }
 
-export const filterUserCurrencyData = (currencyData) =>
-  currencyData.filter((wallet) =>
-    isAllowedCurrency(wallet.isToken ? wallet.tokenKey.toUpperCase() : wallet.currency, wallet.address, wallet.isMetamask)
-  )
+// eslint-disable-next-line max-len
+export const filterUserCurrencyData = (currencyData) => currencyData
+  // .filter((wallet) => isAllowedCurrency(wallet.isToken ? wallet.tokenKey.toUpperCase() : wallet.currency, wallet.address, wallet.isMetamask))
+  .filter((currency) => {
+    const allowedTokens = ['{matic}matic', '{matic}kaxaa', '{matic}usdc', 'btc', 'avax', 'eth', '{eth}usdt', 'bnb']
+
+    if (currency.tokenKey && allowedTokens.includes(currency.tokenKey)) {
+      return true
+    }
+
+    // eslint-disable-next-line no-prototype-builtins
+    return currency.currency && allowedTokens.includes(currency.currency.toLowerCase()) && (!currency.hasOwnProperty('isMetamask') || currency.isMetamask === false)
+  })
 
 export const isAllowedCurrency = (currency = '', address = '', isMetamask = false) => {
+
   const { core: { hiddenCoinsList } } = store.getState()
   const enabledCurrencies = getActivatedCurrencies()
-
   return (
     ((!hiddenCoinsList.includes(currency) && !hiddenCoinsList.includes(`${currency}:${address}`))
-      || isMetamask) &&
-    enabledCurrencies.includes(currency)
+      || isMetamask)
+    && enabledCurrencies.includes(currency)
   )
 }
 
-export const isCorrectWalletToShow = (wallet) => {
-  return !wallet.isMetamask || (wallet.isConnected && !wallet.unknownNetwork)
-}
+export const isCorrectWalletToShow = (wallet) => !wallet.isMetamask || (wallet.isConnected && !wallet.unknownNetwork)
 
 export const getTransakLink = (params) => {
   if (!window.transakApiKey) return ''
@@ -151,7 +123,7 @@ export const getTransakLink = (params) => {
     // which is available for the fiat value that we've passed.
     // `&fiatCurrency=${user.activeFiat}`,
   ]
-  
+
   if (!isLocalHost) {
     parameters.push(`&redirectURL=${hostURL}`)
   }
@@ -163,27 +135,6 @@ export const getTransakLink = (params) => {
   }
 
   return exchangeUrl + parameters.join('')
-}
-
-export const getRampLink = (params) => {
-  const { address = '', currency = '' } = params
-  const rampLink = 'https://buy.ramp.network/'
-
-  const assetKey = SUPPORTED_RAMP_ASSETS[currency?.toUpperCase()]
-
-  if (!assetKey) return rampLink
-
-  const parameters = [
-    `?swapAsset=${assetKey}`,
-  ]
-
-  if (address) parameters.push(`&userAddress=${address}`)
-
-  const addCustomLogo = window?.logoUrl && window.logoUrl !== '#'
-
-  if (addCustomLogo) parameters.push(`&hostLogoUrl=${window.logoUrl}`)
-
-  return rampLink + parameters.join('')
 }
 
 export const getExternalExchangeLink = (params) => {
@@ -199,18 +150,9 @@ export const getExternalExchangeLink = (params) => {
   } else if (externalConfig?.opts?.buyViaCreditCardLink) {
     link = externalConfig.opts.buyViaCreditCardLink
 
-    // check the ramp payment gateway
-    if (link.match(/buy\.ramp\.network/g) && currency) {
-
-      if (SUPPORTED_RAMP_ASSETS[currency.toUpperCase()]) {
-        link = getRampLink(params)
-      }
-
-    }
-
     // checking whether the currency is available in ITEZ
     if (link.match(/itez\.com/g) && currency) {
-      const itezCrypto = ['BTC', 'ETH', 'MATIC']
+      const itezCrypto = ['BTC', 'ETH', 'MATIC', 'KAXAA']
       const match = itezCrypto.find((itezAsset) => currency.toUpperCase().includes(itezAsset))
 
       if (match) {

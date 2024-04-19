@@ -9,12 +9,14 @@ export const setFilter = (state, payload) => ({
   filter: payload,
 })
 
-export const setTransactions = (state, payload) => ({
-  ...state,
-  transactions: [
-    ...payload,
-  ],
-})
+export const setTransactions = (state, payload) => {
+  return ({
+    ...state,
+    transactions: [
+      ...payload,
+    ],
+  })
+}
 
 export const setSwapHistory = (state, payload) => ({
   ...state,

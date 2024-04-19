@@ -1,8 +1,8 @@
 export default {
-  erc20: '0x83048f0Bf34FEeD8CEd419455a4320A735a92e9d', // goerli
+  erc20: '0xc5febf8C2E11f6fC85897b0134A79175b8410b4f', // rinkeby
   bep20: '0x8fa85c2bC2A12997893bB024284E7116D6Fb1bF3',
   erc20matic: '0xDb317405A1F1cA955c07834b1b43241d651A5875',
-  eth: '0xd152cd6f9cf76921759d3f51f743651e549f6925', // goerli
+  eth: '0x6F54CDAE7c98b0306fB3aB4daED4cAEe25b92Bc6',
   bnb: '0x6aa1bdc159e28beca44cc7f1a260a25e7b63f53d',
   matic: '0xf02f99d8D5fd6d40404bf151a4636F8b2e21D057',
   arbitrum: '0x129f1a081e203cb64c67f8782e238e0bf2247084',
@@ -22,18 +22,16 @@ export default {
   spiritSwapFactory: '',
   pangolinSwapFactory: '', // AVAX testnet
   pangolinSwapRouter: '',
-  sushiSwapFactory: '', // MOVR testnet
-  sushiSwapRouter: '',
+  solarSwapFactory: '', // MOVR testnet
+  solarSwapRouter: '',
   viperSwapFactory: '', // ONE
   viperSwapRouter: '',
   trisolarisFactory: '', // AURETH
   trisolarisRouter: '',
   ameFactory: '', // AME testnet
   ameRouter: '',
-  phi_v1Factory: '', // PHI network
-  phi_v1Router: '',
-  phi_Factory: '', // PHI v2 network
-  phi_Router: '',
+  phiFactory: '', // PHI network
+  phiRouter: '',
 
   affiliateAddress: '0x873351e707257C28eC6fAB1ADbc850480f6e0633',
 }

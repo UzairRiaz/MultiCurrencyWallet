@@ -107,6 +107,7 @@
     &:hover,
     &.selected {
       border-color: var(--color-brand);
+      border-width: 2px;
     }
   }
 

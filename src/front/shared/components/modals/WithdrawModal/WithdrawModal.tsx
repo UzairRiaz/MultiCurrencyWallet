@@ -119,10 +119,7 @@ type WithdrawModalState = {
       avaxData,
       movrData,
       oneData,
-      phi_v1Data,
       phiData,
-      fkwData,
-      phpxData,
       ameData,
       btcData,
       ghostData,
@@ -144,10 +141,7 @@ type WithdrawModalState = {
       avaxData,
       movrData,
       oneData,
-      phi_v1Data,
       phiData,
-      fkwData,
-      phpxData,
       ameData,
       btcData,
       ghostData,
@@ -186,7 +180,12 @@ class WithdrawModal extends React.Component<WithdrawModalProps, WithdrawModalSta
 
     const usedAdminFee = adminFee.isEnabled(itemCurrency?.tokenKey || currency)
 
-    const reduxActionName = selectedItem.standard || currency.toLowerCase()
+    let reduxActionName = selectedItem.standard || currency.toLowerCase()
+
+    if (currency.toLowerCase() === 'matic') {
+      reduxActionName = 'matic'
+    }
+
     let commissionCurrency = currency.toUpperCase()
 
     // save wallet for token exchange's rate
@@ -302,7 +301,6 @@ class WithdrawModal extends React.Component<WithdrawModalProps, WithdrawModalSta
   }
 
   reportError = (error: IError, details = '-') => {
-    console.error(error)
     feedback.withdraw.failed(`details(${details}) : error message(${error.message})`)
 
     console.group('%c Withdraw', 'color: red;')
@@ -695,11 +693,10 @@ class WithdrawModal extends React.Component<WithdrawModalProps, WithdrawModalSta
 
   handleScan = (data) => {
     if (data) {
-      const address = (data.indexOf(':') !== -1) ? data.split(':')[1].split('?')[0] : data
-      const amount = (data.indexOf('=') !== -1) ? data.split('=')[1] : false
+      const address = data.split(':')[1].split('?')[0]
+      const amount = data.split('=')[1]
 
-      this.setState(() => ({ address }))
-      if (amount !== false) this.setState(() => ({ amount }))
+      this.setState(() => ({ address, amount }))
       this.openScan()
     }
   }
@@ -882,7 +879,13 @@ class WithdrawModal extends React.Component<WithdrawModalProps, WithdrawModalSta
       invoice,
     } = selectedCurrency
 
-    const tableRows = user.filterUserCurrencyData(actions.core.getWallets())
+    const unsortedTableRows = user.filterUserCurrencyData(actions.core.getWallets())
+
+    const tableRows =  [
+        ...unsortedTableRows.filter((item) => item.currency.toLowerCase() === 'kaxaa'),
+        ...unsortedTableRows.filter((item) => item.currency.toLowerCase() !== 'kaxaa')
+    ]
+
     const activeCryptoCurrency = getCurrencyKey(selectedCurrency.currency, true).toUpperCase()
     const selectedValueView = getCurrencyKey(selectedValue, true).toUpperCase()
     const cryptoCurrencyHaveInfoPrice = this.returnHaveInfoPrice({
@@ -988,7 +991,7 @@ class WithdrawModal extends React.Component<WithdrawModalProps, WithdrawModalSta
         </div>
         <div styleName="highLevel">
           <FieldLabel>
-            <FormattedMessage id="Withdrow1194" defaultMessage="Address " />
+            Transfer to address
             {' '}
             <Tooltip id="WtH203">
               <div style={{ textAlign: 'center' }}>
@@ -1083,7 +1086,7 @@ class WithdrawModal extends React.Component<WithdrawModalProps, WithdrawModalSta
               && (
                 <>
                   <div style={{ marginLeft: '15px' }}>
-                    <Button disabled={fetchFee} blue big onClick={this.setMaxBalance} id="Withdrow134">
+                    <Button disabled={fetchFee} blue big onClick={this.setMaxBalance} id="Withdrow134" className="h-67px">
                       <FormattedMessage id="Select210" defaultMessage="MAX" />
                     </Button>
                   </div>

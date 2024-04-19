@@ -26,7 +26,7 @@
   background: var(--color-background-elements);
   border-radius: var(--main-component-border-radius);
   padding: 25px;
-  margin-top: 20px;
+  margin-top: 0px;
 }
 
 .yourAssetsHeading {
@@ -39,8 +39,8 @@
 .yourAssetsDescr {
   color: var(--color-notice);
   font-size: 14px;
-  @include ff-regular;
   line-height: 150%;
+  font-weight: 500;
 }
 
 .yourBalance {
@@ -223,6 +223,7 @@
 
 @media all and (max-width: 767px) {
 
+
   .yourBalance,
   .yourAssets {
     width: 100%;
@@ -307,4 +308,13 @@
   padding: 0.3em 0.5em;
   background: rgba(var(--color-bad), 0.6);
   border-radius: 2px;
+}
+
+.curKaxaa {
+  // override width
+  width: 23px !important;
+}
+
+.margin-top-10{
+  margin-top: 10px;
 }

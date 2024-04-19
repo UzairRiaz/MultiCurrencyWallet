@@ -1,17 +1,13 @@
 .text {
-  font-size: 20px;
-  width: 284px;
-  text-align: center;
+  font-size: 14px;
+  text-align: left;
   margin: auto;
   margin-bottom: 45px;
   margin-top: 30px;
   margin-bottom: 30px;
-  font-weight: 800;
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 140%;
   color: var(--color-notice);
-  @include ff-bold;
+  font-weight: 500;
+  margin: 0;
 }
 
 .currenciesWrapper {
@@ -31,13 +27,14 @@
   padding: 16px 0;
   padding: 0px 0 25px;
   border-bottom: 1px solid var(--color-border);
-}
+  margin-bottom: 30px}
 
 .title {
   @include ff-bold;
-  text-align: center;
-  font-size: 21px;
-  line-height: 22px;
+  text-align: left;
+  font-size: 24px;
+  line-height: 33px;
+  margin: 0 0 10px;
 
   &.uppercase {
     text-transform: uppercase;
@@ -123,6 +120,8 @@
   align-items: center;
   justify-content: center;
   opacity: 1;
+  max-width: 800px;
+  margin: auto;
 
   &_dashboardView {
     background: none;
@@ -135,13 +134,12 @@
   display: flex;
   flex-direction: column;
   background: var(--color-background-elements);
-  padding: 32px;
+  padding: 25px;
   width: 100%;
   min-width: 550px;
   max-width: max-content;
   height: auto;
-  border-radius: var(--main-component-border-radius);
-  box-shadow: 0 0 5px rgba(0, 0, 0, .4);
+  border-radius: var(--main-component-border-radius); box-shadow: var(--box-shadow); background: var(--color-background-elements);
 
   &_dashboardView {
     box-shadow: none;

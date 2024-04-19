@@ -5,7 +5,6 @@ import actions from 'redux/actions'
 import cssModules from 'react-css-modules'
 import { constants, externalConfig, getCurrencyKey, user } from 'helpers'
 import erc20Like from 'common/erc20Like'
-import getCoinInfo from 'common/coins/getCoinInfo'
 import styles from '../Styles/default.scss'
 import ownStyles from './ReceiveModal.scss'
 import QR from 'components/QR/QR'
@@ -65,40 +64,28 @@ class ReceiveModal extends React.Component<any, any> {
     const mnemonicSaved = (mnemonic === `-`)
 
     howToDeposit = howToDeposit.replace(/{userAddress}/g, address);
+    let tokenOrCurrency = currency
+    if (['kaxaa', 'usdc', 'matic'].includes(currency.toLowerCase())) {
+      tokenOrCurrency = `{matic}${currency.toLowerCase()}`
+    }
 
-    const targetCurrency = getCurrencyKey(currency.toLowerCase(), true)
-
-    const isToken = erc20Like.isToken({ name: currency })
-    const recieveUrl = (isToken ? '/token' : '') + `/${targetCurrency}/${address}/receive`
-
-    const {
-      tokenSymbol,
-      tokenBlockchain,
-    } = ((currency, isToken) => {
-      if (isToken) {
-        const tokenInfo = getCoinInfo(currency)
-        return {
-          tokenSymbol: tokenInfo.coin,
-          tokenBlockchain: tokenInfo.blockchain,
-        }
-      } else {
-        return { tokenSymbol: ``, tokenBlockchain: `` }
-      }
-    })(currency, isToken)
+    if(['usdt'].includes(currency.toLowerCase())) {
+      tokenOrCurrency = `{eth}${currency.toLowerCase()}`
+    }
+    const targetCurrency = getCurrencyKey(tokenOrCurrency.toLowerCase(), true)
+    const isToken = erc20Like.isToken({ name: tokenOrCurrency })
+    const recieveUrl = (isToken ? '/token' : '') + `/${tokenOrCurrency}/${address}/receive`
 
     props.history.push(recieveUrl)
 
     this.state = {
       step: (mnemonicSaved) ? 'receive' : 'saveMnemonic',
       howToDeposit,
-      isToken,
-      tokenSymbol,
-      tokenBlockchain,
     }
   }
 
   handleBeginSaveMnemonic = async () => {
-    actions.modals.open(constants.modals.SaveWalletSelectMethod, {
+    actions.modals.open(constants.modals.SaveMnemonicModal, {
       onClose: () => {
         const mnemonic = localStorage.getItem(constants.privateKeyNames.twentywords)
         const mnemonicSaved = (mnemonic === `-`)
@@ -130,13 +117,7 @@ class ReceiveModal extends React.Component<any, any> {
       data: { currency, address },
     } = this.props
 
-    const {
-      howToDeposit,
-      step,
-      isToken,
-      tokenSymbol,
-      tokenBlockchain,
-    } = this.state
+    const { howToDeposit, step } = this.state
 
     const externalExchangeLink = user.getExternalExchangeLink({ address, currency, locale })
 
@@ -155,22 +136,11 @@ class ReceiveModal extends React.Component<any, any> {
               )}
 
               <p style={{ fontSize: 25 }}>
-                {isToken ? (
-                  <FormattedMessage
-                    id="ReceiveModal_TokenAddress"
-                    defaultMessage="This is your {tokenSymbol} address on the {tokenBlockchain} blockchain"
-                    values={{
-                      tokenSymbol,
-                      tokenBlockchain,
-                    }}
-                  />
-                ) : (
-                  <FormattedMessage
-                    id="ReceiveModal50"
-                    defaultMessage="This is your {currency} address"
-                    values={{ currency: `${currency.toUpperCase()}` }}
-                  />
-                )}
+                <FormattedMessage
+                  id="ReceiveModal50"
+                  defaultMessage="This is your {currency} address"
+                  values={{ currency: `${currency}` }}
+                />
               </p>
               <Copy text={address}>
                 <div styleName="qr">

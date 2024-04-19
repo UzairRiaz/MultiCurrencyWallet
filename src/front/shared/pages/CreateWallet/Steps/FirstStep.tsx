@@ -22,10 +22,11 @@ function FirstStep(props) {
     <>
       <>
         <>
-          <Explanation step={1} subHeaderText={subHeaderText1()}>
-            {!isWidgetBuild && (
-              <Cupture />
-            )}
+          <Explanation step={-1} subHeaderText={subHeaderText1()}>
+            {/* {!isWidgetBuild && ( */}
+            {/* // <Cupture /> */}
+            {/* <></> */}
+            {/* )} */}
           </Explanation>
           <div styleName={`currencyChooserWrapper ${startPack.length < 4 ? 'smallArr' : ''}`}>
             {startPack.map((el, index) => {
@@ -66,7 +67,7 @@ function FirstStep(props) {
         !isMobile && curState?.BTC && showPinContent
         && (
           <div>
-            <Explanation step={2} subHeaderText={subHeaderText2()} notMain>
+            <Explanation step={0} subHeaderText={subHeaderText2()} notMain>
               {cupture2()}
             </Explanation>
           </div>

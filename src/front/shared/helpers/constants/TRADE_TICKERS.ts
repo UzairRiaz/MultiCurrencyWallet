@@ -1,10 +1,11 @@
 import config from 'helpers/externalConfig'
 import TOKEN_STANDARDS from 'helpers/constants/TOKEN_STANDARDS'
+
 const NETWORK = process.env.MAINNET ? 'mainnet' : 'testnet'
 
 const getCustomTokenConfig = () => {
-  //@ts-ignore: strictNullChecks
-  let tokensInfo = JSON.parse(localStorage.getItem('customToken'))
+  // @ts-ignore: strictNullChecks
+  const tokensInfo = JSON.parse(localStorage.getItem('customToken'))
   if (!tokensInfo || !tokensInfo[NETWORK]) return {}
   return tokensInfo[NETWORK]
 }
@@ -25,10 +26,11 @@ if (window
   buildOpts = { ...buildOpts, ...window.buildOptions }
 }
 
-const swap = (config && config.isWidget) ?
-  []
-  :
-  [
+const swap = (config && config.isWidget)
+  ? []
+  :  [
+    '{MATIC}MATIC-{MATIC}KAXAA',
+    '{MATIC}USDC-{MATIC}KAXAA',
     ...(!config.opts.curEnabled || (config.opts.curEnabled.eth && config.opts.curEnabled.btc)) ? ['ETH-BTC'] : [],
     ...(!config.opts.curEnabled || (config.opts.curEnabled.bnb && config.opts.curEnabled.btc)) ? ['BNB-BTC'] : [],
     ...(!config.opts.curEnabled || (config.opts.curEnabled.matic && config.opts.curEnabled.btc)) ? ['MATIC-BTC'] : [],
@@ -115,7 +117,6 @@ if (buildOpts.addCustomTokens) {
     })
   })
 }
-
 
 export default [
   ...swap,

@@ -70,8 +70,8 @@
   }
 
   &.active {
-    background-color: var(--color-inactive-border);
-    border-color: var(--color-inactive-border);
+    background-color: var(--color-brand);
+    border-color: var(--color-brand);
   }
 
   &.disabled {
@@ -95,13 +95,13 @@
     padding: 0.5rem;
 
     &:hover {
-      background-color: var(--color-inactive-border);
-      border-color: var(--color-inactive-border);
+      background-color: var(--color-brand);
+      border-color: var(--color-brand);
     }
 
     &:active {
       background-color: var(--color-border);
-      border-color: var(--color-inactive-border);
+      border-color: var(--color-brand);
     }
   }
 }

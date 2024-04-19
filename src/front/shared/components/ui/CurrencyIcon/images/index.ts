@@ -29,12 +29,10 @@ import pay from './pay.png'
 import eurs from './eurs.svg'
 import ghost from './ghost.svg'
 import next from './next.svg'
-import phi_v1 from './phi.png'
-import phi from './phi_v2.png'
-import fkw from './fkw.png'
-import phpx from './phpx.png'
-
-
+import phi from './phi.png'
+import kaxaa from './kaxaa.svg'
+import kaxaar from './kaxaar.svg'
+import usdc from './usdc.svg'
 
 export default {
   btc,
@@ -71,8 +69,8 @@ export default {
   eurs,
   ghost,
   next,
-  phi_v1,
   phi,
-  fkw,
-  phpx,
+  kaxaa,
+  usdc,
+  kaxaar
 }

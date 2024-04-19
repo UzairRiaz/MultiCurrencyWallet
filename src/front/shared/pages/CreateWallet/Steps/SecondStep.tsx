@@ -114,6 +114,8 @@ function SecondStep(props) {
     } catch (error) {
       console.error(error)
     }
+
+    handleFinish();
   })
 
   const handleFinish = () => {

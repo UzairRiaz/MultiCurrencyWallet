@@ -1,4 +1,16 @@
 export default {
+  // kax: {
+  //   address: '0x5A55B82cDB9e8a700d52BbdeF3eE428666e9104A',
+  //   decimals: 18,
+  //   fullName: 'KAXAA',
+  //   canSwap: true,
+  // },
+  // usdc: {
+  //   address: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+  //   decimals: 6,
+  //   fullName: 'USD Coin',
+  //   canSwap: true,
+  // },
   swap: {
     address: '0x14a52cf6B4F68431bd5D9524E4fcD6F41ce4ADe9',
     decimals: 18,

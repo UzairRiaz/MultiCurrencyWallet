@@ -35,7 +35,6 @@ import backupUserData from 'plugins/backupUserData'
 import { FormattedMessage, injectIntl } from 'react-intl'
 import metamask from 'helpers/metamask'
 
-
 const userLanguage = utils.getCookie('mylang') || "en"
 moment.locale(userLanguage)
 
@@ -256,7 +255,7 @@ class App extends React.Component<RouteComponentProps<any>, any> {
     //@ts-ignore
     const { currencies } = this.props
 
-    if (config.opts.preventMultiTab) this.preventMultiTabs(false)
+    this.preventMultiTabs(false)
 
     const isWalletCreate = localStorage.getItem(constants.localStorage.isWalletCreate)
 

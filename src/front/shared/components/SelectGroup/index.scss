@@ -22,8 +22,8 @@
 .groupField {
   width: 100%;
   display: inline-flex;
-  height: 68px;
-  margin-bottom: 25px;
+  height: 60px;
+  // margin-bottom: 25px;
   vertical-align: center;
   border-radius: 6px;
   text-align: center;
@@ -59,9 +59,14 @@
   min-width: 0;
   flex: auto 1 1;
   input {
-    height: 68px;
-    font-size: 24px;
-  }
+    height: 60px;
+    font-size: 16px;
+    border-radius: 7px;;
+    -webkit-border-radius: 7px;;
+    -moz-border-radius: 7px;;
+    -ms-border-radius: 7px;;
+    -o-border-radius: 7px;;
+}
 }
 
 .textForNull {
@@ -95,6 +100,10 @@ input:disabled {
   position: relative;
 }
 
+
+.item--value {border: 1px solid #7774 !important;}
+
+
 .currencySelect {
   border-radius: 0 6px 6px 0 !important;
   background: none !important;
@@ -102,7 +111,7 @@ input:disabled {
   position: absolute !important;
   @include ff-bold;
   right: 1px;
-  top: 6px;
+  top: 0px;
 
   > div:nth-child(2) {
     margin-top: 10px;
@@ -118,21 +127,22 @@ input:disabled {
       display: flex;
       flex-direction: row-reverse;
       justify-content: flex-end;
-      border: none;
+      font-weight: 14px;
+      font-weight: 400;
     }
   }
   input {
     border: none;
     height: 69px;
-    border-bottom: 1px solid var(--color);
+    border-bottom: 1px solid #7774;
+    background: #f2f2f2;
     font-size: 16px;
-    padding-left: 2px;
   }
 }
 
 .currencySelect.dropDown {
   width: 100%;
-  border: 1px solid var(--color);
+  border: 1px solid #7774;
   top: 0px;
   z-index: 1;
   background: var(--color-background-elements);

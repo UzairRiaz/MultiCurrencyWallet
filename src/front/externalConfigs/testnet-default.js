@@ -110,7 +110,6 @@ window.widgetEvmLikeTokens = [
   //   fullName: '',
   //   icon: '',
   //   customExchangeRate: '',
-  //   customFiatPrice: '',
   //   iconBgColor: '',
   //   howToDeposit: '',
   //   howToWithdraw: '',
@@ -134,6 +133,46 @@ window.widgetEvmLikeTokens = [
   // },
 ]
 */
+window.widgetEvmLikeTokens = [
+  {
+    standard: 'erc20matic', // BLOCKCHAIN: 'matic'
+    address: '0x5A55B82cDB9e8a700d52BbdeF3eE428666e9104A',
+    decimals: 18,
+    name: 'kaxaa',
+    fullName: 'Kaxaa Token',
+    symbol: 'kax',
+  },
+  {
+    standard: 'erc20matic', //
+    address: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+    decimals: 6,
+    name: 'USDC',
+    fullName: 'USD Coin',
+    symbol: 'USDC',
+  },
+  {
+    standard: 'erc20matic', //
+    address: '0x0000000000000000000000000000000000001010',
+    decimals: 18,
+    name: 'MATIC',
+    fullName: 'MATIC Token',
+    symbol: 'MATIC',
+  },
+]
+
+// KAXN: {
+//     ticker: 'KAX',
+//     name: 'KAXAA Token',
+//     type: COIN_TYPE.MATIC_TOKEN,
+//     blockchain: BLOCKCHAIN.MATIC,
+//     model: COIN_MODEL.AB,
+//     precision: 18,
+//   },
+
+// Platform: polygon chain
+// Platformkey: matic
+// Value: erc20matic
+// Currency: matic
 
 window.buildOptions = {
   // ownTokens: true, // Will be inited from window.widgetEvmLikeTokens
@@ -146,25 +185,8 @@ window.buildOptions = {
   exchangeDisabled: false,
   curEnabled: { // Or 'false' if enabled all
     // inited from window.CUR_<NAME>_DISABLED
-    btc: true,
-    eth: true,
-    bnb: true,
-    matic: true,
-    arbeth: true,
-    aureth: true,
-    xdai: true,
-    ftm: true,
-    avax: true,
-    movr: true,
-    one: true,
-    ame: true,
-    ghost: true,
-    next: false,
-  },
-  blockchainSwapEnabled: {
-    btc: true,
-    eth: true,
-    bnb: true,
+    eth: false,
+    bnb: false,
     matic: true,
     arbeth: false,
     aureth: false,
@@ -174,11 +196,30 @@ window.buildOptions = {
     movr: false,
     one: false,
     ame: false,
+    phi: false,
+    btc: false,
+    ghost: false,
+    next: false,
+  },
+  blockchainSwapEnabled: {
+    matic: true,
+    btc: false,
+    eth: false,
+    bnb: false,
+    arbeth: false,
+    aureth: false,
+    xdai: false,
+    ftm: false,
+    avax: false,
+    movr: false,
+    one: false,
+    ame: false,
+    phi: false,
     ghost: false,
     next: false,
   },
   defaultExchangePair: {
-    buy: '{eth}usdt',
-    sell: 'btc',
+    buy: 'kax',
+    sell: 'kax',
   }
 }

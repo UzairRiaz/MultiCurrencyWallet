@@ -57,9 +57,9 @@ export const LIQUIDITY_SOURCE_DATA = {
     factory: config.swapContract.pangolinSwapFactory,
   },
   [config.evmNetworks.MOVR.networkVersion]: {
-    name: 'SushiSwap',
-    router: config.swapContract.sushiSwapRouter,
-    factory: config.swapContract.sushiSwapFactory,
+    name: 'SolarSwap',
+    router: config.swapContract.solarSwapRouter,
+    factory: config.swapContract.solarSwapFactory,
   },
   [config.evmNetworks.ONE.networkVersion]: {
     name: 'ViperSwap',
@@ -71,25 +71,10 @@ export const LIQUIDITY_SOURCE_DATA = {
     router: config.swapContract.trisolarisRouter,
     factory: config.swapContract.trisolarisFactory,
   },
-  [config.evmNetworks.PHI_V1.networkVersion]: {
-    name: 'PHIv1 Swap',
-    router: config.swapContract.phi_v1Router,
-    factory: config.swapContract.phi_v1Factory,
-  },
   [config.evmNetworks.PHI.networkVersion]: {
     name: 'PHI Swap',
     router: config.swapContract.phiRouter,
     factory: config.swapContract.phiFactory,
-  },
-  [config.evmNetworks.FKW.networkVersion]: {
-    name: 'FKW Swap',
-    router: config.swapContract.fkwRouter,
-    factory: config.swapContract.fkwFactory,
-  },
-  [config.evmNetworks.PHPX.networkVersion]: {
-    name: 'PHPX Swap',
-    router: config.swapContract.phpxRouter,
-    factory: config.swapContract.phpxFactory,
   },
   [config.evmNetworks.AME.networkVersion]: {
     name: 'AME Swap',

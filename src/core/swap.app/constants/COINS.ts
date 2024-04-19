@@ -10,10 +10,7 @@ export const COIN_TYPE = Object.freeze({
   ONE_TOKEN: 'ONE_TOKEN',
   AME_TOKEN: 'AME_TOKEN',
   AURORA_TOKEN: 'AURORA_TOKEN',
-  PHI_V1_TOKEN: 'PHI_V1_TOKEN',
   PHI_TOKEN: 'PHI_TOKEN',
-  FKW_TOKEN: 'FKW_TOKEN',
-  PHPX_TOKEN: 'PHPX_TOKEN',
 })
 
 export const TOKEN_STANDARD = Object.freeze({
@@ -27,10 +24,7 @@ export const TOKEN_STANDARD = Object.freeze({
   ERC20ONE: 'ERC20ONE',
   ERC20AME: 'ERC20AME',
   ERC20AURORA: 'ERC20AURORA',
-  PHI20_V1: 'PHI20_V1',
   PHI20: 'PHI20',
-  FKW20: 'FKW20',
-  PHPX20: 'PHPX20',
 })
 
 export const BLOCKCHAIN = Object.freeze({
@@ -48,10 +42,8 @@ export const BLOCKCHAIN = Object.freeze({
   ONE: 'ONE',
   AME: 'AME',
   AURETH: 'AURETH', // AURORA
-  PHI_V1: 'PHI_V1',
   PHI: 'PHI',
-  FKW: 'FKW',
-  PHPX: 'PHPX',
+  KAX: 'MATIC'
 })
 
 export const BASE_TOKEN_CURRENCY = Object.freeze({
@@ -65,18 +57,33 @@ export const BASE_TOKEN_CURRENCY = Object.freeze({
   ONE: 'ONE',
   AME: 'AME',
   AURETH: 'AURETH',
-  PHI_V1: 'PHI_V1',
   PHI: 'PHI',
-  FKW: 'FKW',
-  PHPX: 'PHPX',
+  KAX: 'MATIC',
 })
 
 export const COIN_MODEL = Object.freeze({
   UTXO: 'UTXO', // Unspent Transaction Outputs model
-  AB: 'AB' // Account/Balance model
+  AB: 'AB', // Account/Balance model
 })
 
 export const COIN_DATA = {
+  KAX: {
+    ticker: 'KAX',
+    name: 'KAXAA Token',
+    type: COIN_TYPE.MATIC_TOKEN,
+    blockchain: BLOCKCHAIN.MATIC,
+    model: COIN_MODEL.AB,
+    precision: 18,
+  },
+  // USDC: {
+  //   ticker: 'USDC',
+  //   name: 'USD Coin',
+  //   type: COIN_TYPE.NATIVE,
+  //   blockchain: BLOCKCHAIN.MATIC,
+  //   standard: TOKEN_STANDARD.ERC20,
+  //   model: COIN_MODEL.AB,
+  //   precision: 6,
+  // },
   BTC: {
     ticker: 'BTC',
     name: 'Bitcoin',
@@ -173,15 +180,6 @@ export const COIN_DATA = {
     model: COIN_MODEL.AB,
     precision: 18,
   },
-  PHI_V1: {
-    ticker: 'PHI_V1',
-    name: 'PHI_V1',
-    type: COIN_TYPE.PHI_V1_TOKEN,
-    blockchain: BLOCKCHAIN.PHI_V1,
-    standard: TOKEN_STANDARD.PHI20_V1,
-    model: COIN_MODEL.AB,
-    precision: 18,
-  },
   PHI: {
     ticker: 'PHI',
     name: 'PHI',
@@ -191,33 +189,15 @@ export const COIN_DATA = {
     model: COIN_MODEL.AB,
     precision: 18,
   },
-  FKW: {
-    ticker: 'FKW',
-    name: 'FKW',
-    type: COIN_TYPE.FKW_TOKEN,
-    blockchain: BLOCKCHAIN.FKW,
-    standard: TOKEN_STANDARD.FKW20,
-    model: COIN_MODEL.AB,
-    precision: 18,
-  },
-  PHPX: {
-    ticker: 'PHPX',
-    name: 'PHPX',
-    type: COIN_TYPE.PHPX_TOKEN,
-    blockchain: BLOCKCHAIN.PHPX,
-    standard: TOKEN_STANDARD.PHPX20,
-    model: COIN_MODEL.AB,
-    precision: 18,
-  },
-  USDT: {
-    ticker: 'USDT',
-    name: 'Tether',
-    type: COIN_TYPE.ETH_TOKEN,
-    blockchain: BLOCKCHAIN.ETH,
-    standard: TOKEN_STANDARD.ERC20,
-    model: COIN_MODEL.AB,
-    precision: 18,
-  },
+  // USDT: {
+  //   ticker: 'USDT',
+  //   name: 'Tether',
+  //   type: COIN_TYPE.ETH_TOKEN,
+  //   blockchain: BLOCKCHAIN.ETH,
+  //   standard: TOKEN_STANDARD.ERC20,
+  //   model: COIN_MODEL.AB,
+  //   precision: 18,
+  // },
   BTCB: {
     ticker: 'BTCB',
     name: 'BTCB Token',
@@ -272,7 +252,6 @@ export const COIN_DATA = {
   },
 }
 
-
 // todo: move to COIN_DATA
 
 export const NATIVE = {
@@ -288,10 +267,7 @@ export const NATIVE = {
   movr: 'MOVR',
   one: 'ONE',
   ame: 'AME',
-  phi_v1: 'PHI_V1',
   phi: 'PHI',
-  fkw: 'FKW',
-  phpx: 'PHPX',
   ghost: 'GHOST',
   next: 'NEXT',
 }
@@ -302,6 +278,7 @@ export const BNB_TOKENS = {
 
 export const MATIC_TOKENS = {
   wbtc: 'WBTC',
+  usdt: '{MATIC}USDT',
 }
 
 export const ETH_TOKENS = {

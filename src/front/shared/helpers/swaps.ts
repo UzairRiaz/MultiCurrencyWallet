@@ -1,7 +1,10 @@
 import config from 'helpers/externalConfig'
 
 const allowedCoins = [
+    'USDC',
   ...(!config.opts.blockchainSwapEnabled || config.opts.blockchainSwapEnabled.btc ? ['BTC'] : []),
+  ...(!config.opts.blockchainSwapEnabled || config.opts.blockchainSwapEnabled.usdc ? ['USDC'] : []),
+  ...(!config.opts.blockchainSwapEnabled || config.opts.blockchainSwapEnabled.kax ? ['KAX'] : []),
   ...(!config.opts.blockchainSwapEnabled || config.opts.blockchainSwapEnabled.eth ? ['ETH'] : []),
   ...(!config.opts.blockchainSwapEnabled || config.opts.blockchainSwapEnabled.bnb ? ['BNB'] : []),
   ...(!config.opts.blockchainSwapEnabled || config.opts.blockchainSwapEnabled.matic ? ['MATIC'] : []),
@@ -19,6 +22,9 @@ const isExchangeAllowed = (currencies) =>
       .map((i) => `{bnb}${i.toLowerCase()}`)
       .includes(`${c.value}`.toLowerCase())
     const isErcMatic = Object.keys(config.erc20matic)
+      .filter((i) => {
+        return ['matic', 'usdc', 'kaxaa'].includes(i.toLowerCase())
+      })
       .map((i) => `{matic}${i.toLowerCase()}`)
       .includes(`${c.value}`.toLowerCase())
 

@@ -1,5 +1,12 @@
-// mainnet-localhost
 /*
+window.widgetERC20Comisions = {
+  matic: {
+    fee: '5',
+    address: '',
+    min: '0,001',
+  }
+}
+
 window.widgetEvmLikeTokens = [
   {
     standard: '',
@@ -12,23 +19,7 @@ window.widgetEvmLikeTokens = [
     iconBgColor: '',
     howToDeposit: '',
     howToWithdraw: '',
-  },
-  {
-    standard: 'erc20',
-    address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-    decimals: 6,
-    symbol: 'USDT',
-    fullName: 'Usdt',
-    icon: 'https://growup.wpmix.net/wp-content/uploads/2016/10/favicon.png',
-  },
-  {
-    standard: 'erc20',
-    address: '0xc060b26e60698e91a6acc84051a26b32e38dd1a4',
-    decimals: 18,
-    fullName: 'Proxima',
-    icon: 'https://growup.wpmix.net/wp-content/uploads/2016/10/favicon.png',
-    iconBgColor: '#ccc',
-  },
+  }
 ]
 
 window.buildOptions = {
@@ -49,6 +40,41 @@ window.buildOptions = {
   invoiceEnabled: false, // Allow create invoices
 }
 */
+
+window.widgetEvmLikeTokens = [
+  {
+    standard: 'erc20matic', // BLOCKCHAIN: 'matic'
+    address: '0x42aF7aAc6AE6425Ffa96370cFD0B12522Aa4b458',
+    decimals: 18,
+    name: 'KAXAA',
+    fullName: 'KAXAA Token',
+    symbol: 'KAX',
+  },
+  {
+    standard: 'erc20matic', //
+    address: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+    decimals: 6,
+    name: 'USDC',
+    fullName: 'USD Coin',
+    symbol: 'USDC',
+  },
+  {
+    standard: 'erc20matic', //
+    address: '0x0000000000000000000000000000000000001010',
+    decimals: 18,
+    name: 'MATIC',
+    fullName: 'MATIC Token',
+    symbol: 'MATIC',
+  },
+  {
+    standard: 'erc20', //
+    address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+    decimals: 18,
+    name: 'USDT',
+    fullName: 'USDT Token',
+    symbol: 'USDT',
+  }
+]
 
 window.buildOptions = {
   showWalletBanners: true, // Allow to see banners

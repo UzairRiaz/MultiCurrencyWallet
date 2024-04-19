@@ -52,7 +52,7 @@ import {
   BTC2MATICTOKEN,
 
   ARBITRUM2BTC,
-  BTC2ARBITRUM,  
+  BTC2ARBITRUM,
 } from 'swap.flows'
 import {
   BtcSwap,

@@ -11,10 +11,7 @@ import erc20one from './erc20one'
 import erc20ame from './erc20ame'
 import erc20aurora from './erc20aurora'
 import bep20 from './bep20'
-import phi20_v1 from './phi20'
 import phi20 from './phi20'
-import fkw20 from './fkw20'
-import phpx20 from './phpx20'
 import api from './api'
 import swapContract from './swapContract'
 import feeRates from './feeRates'
@@ -24,6 +21,7 @@ import swapConfig from './swapConfig'
 import evmNetworks from './evmNetworks'
 import evmNetworkVersions from './evmNetworkVersions'
 import limitOrder from './limitOrder'
+import kaxa from "./kaxa";
 
 export default {
   web3,
@@ -32,10 +30,7 @@ export default {
   pubsubRoom,
   erc20,
   bep20,
-  phi20_v1,
   phi20,
-  fkw20,
-  phpx20,
   erc20matic,
   erc20xdai,
   erc20ftm,
@@ -52,4 +47,5 @@ export default {
   evmNetworks,
   evmNetworkVersions,
   limitOrder,
+  kaxa,
 }

@@ -13,7 +13,7 @@ import check from './images/check'
 
 const Explanation = ({ subHeaderText, children, step, createWallet: { step: stepNum }, notMain, isShow }) => (
   <div styleName={`inLine ${notMain ? 'notMain' : ''}`}>
-    {!isMobile && !isShow &&
+    {!isMobile && !isShow && (step !== -1) &&
       <div styleName={`stepNumber ${color(step, stepNum)}`}>
         {stepNum > step ? check() : step}
       </div>

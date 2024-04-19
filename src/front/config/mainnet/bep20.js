@@ -11,4 +11,10 @@ export default {
     fullName: 'BTCB Token',
     canSwap: true,
   },
+  doge: {
+    address: '0xba2ae424d960c26247dd6c32edc70b295c744c43',
+    decimals: 8,
+    fullName: 'DOGE',
+    canSwap: true,
+  },
 }

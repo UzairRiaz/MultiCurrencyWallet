@@ -143,8 +143,8 @@ const fetchTxInfo = (options) : any => {
     }
 
     let receiverAddress = null
-    let afterBalance = txCoins && txCoins.inputs && txCoins.inputs[1] 
-      ? new BigNumber(txCoins.inputs[1].value).dividedBy(1e8).toNumber() 
+    let afterBalance = txCoins && txCoins.inputs && txCoins.inputs[1]
+      ? new BigNumber(txCoins.inputs[1].value).dividedBy(1e8).toNumber()
       : null
     let adminOutput = []
     let adminFee : number | boolean = false
@@ -189,7 +189,7 @@ const fetchTxInfo = (options) : any => {
       adminFee = new BigNumber(adminOutput[0].value).dividedBy(1e8).toNumber()
     }
 
-    
+
     if (txCoins && txCoins.outputs && txCoins.outputs[0]) {
       receiverAddress = txCoins.outputs[0].address
     }
@@ -203,7 +203,7 @@ const fetchTxInfo = (options) : any => {
       confirmed: !!(baseTxInfo.confirmations),
       confirmations: baseTxInfo.confirmations,
       receiverAddress,
-      
+
       minerFee: baseTxInfo.fees,
       adminFee,
       minerFeeCurrency: 'BTC',
@@ -291,7 +291,7 @@ const prepareUnspents = (options: IPrepareUnspentsOptions): Promise<IBtcUnspent[
 
   return new Promise((resolve, reject) => {
     const needAmount = new BigNumber(amount).multipliedBy(1e8).plus(DUST)
-    
+
     // Sorting all unspent inputs from minimum amount to maximum
     const sortedUnspents: IBtcUnspent[] = unspents.sort((a: IBtcUnspent, b: IBtcUnspent) => {
       return (new BigNumber(a.satoshis).isEqualTo(b.satoshis))
@@ -300,7 +300,7 @@ const prepareUnspents = (options: IPrepareUnspentsOptions): Promise<IBtcUnspent[
           ? 1
           : -1
     })
-    
+
     // let's try to find one unspent input which will enough for all commission
     //@ts-ignore: strictNullChecks
     let oneUnspent: IBtcUnspent = null
@@ -343,7 +343,7 @@ const broadcastTx = (options): any => {
   } = options
 
   return new Promise(async (resolve, reject) => {
-    let answer : any | boolean = false // @ToDo - make interface for api answer 
+    let answer : any | boolean = false // @ToDo - make interface for api answer
     try {
       answer = await apiLooper.post(apiBitpay || getBitpay(NETWORK), `/tx/send`, {
         body: {
@@ -575,7 +575,7 @@ const getTransactionBlocyper = (options) => {
           let value = isSelf
             ? item.fees
             : item.outputs.filter((output) => {
-              
+
               const currentAddress = output.addresses[0]
 
               return direction === 'in'
@@ -610,7 +610,7 @@ const getTransactionBlocyper = (options) => {
   })
 }
 
-/** 
+/**
   Draft - взято из фронта, там не используется
   Но нужно реализовать
   игноры - явные ошибки - есть зависимости от фронта shared/actions/btc
@@ -628,7 +628,7 @@ const getTransactionBitcore = (options) => {
     apiBitpay,
     NETWORK,
   } = options
-  
+
   return new Promise(async (resolve) => {
     // @ts-ignore
     const myAllWallets = getAllMyAddresses()
@@ -1214,11 +1214,12 @@ const prepareRawTx = async (params) => {
         return { message: `Fail fetch tx raw `+ txid + `(`+eFetchTxRaw.message+`)` }
       }
 
-      psbt.addInput({
-        hash: txid,
-        index: vout,
-        nonWitnessUtxo: Buffer.from(rawTx, 'hex'),
-      })
+      const psbtInput: any = {};
+      psbtInput['hash'] = txid;
+      psbtInput['index'] = vout;
+      psbtInput['nonWitnessUtxo'] = Buffer.from(rawTx, 'hex');
+
+      psbt.addInput(psbtInput)
     }
 
     psbt.signAllInputs(keyPair)
@@ -1244,12 +1245,13 @@ const prepareRawTx = async (params) => {
       return { message: `Fail fetch tx raw `+ txid + `(`+eFetchTxRaw.message+`)` }
     }
 
-    psbt.addInput({
-      hash: txid,
-      index: vout,
-      redeemScript: p2ms.output,
-      nonWitnessUtxo: Buffer.from(rawTx, 'hex'),
-    })
+    const psbtInput: any = {};
+    psbtInput['hash'] = txid;
+    psbtInput['index'] = vout;
+    psbtInput['redeemScript'] = p2ms.output;
+    psbtInput['nonWitnessUtxo'] = Buffer.from(rawTx, 'hex');
+
+    psbt.addInput(psbtInput)
   }
 
   psbt.signAllInputs(keyPair)

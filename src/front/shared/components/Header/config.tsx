@@ -3,11 +3,9 @@ import links from 'helpers/links'
 import externalConfig from 'helpers/externalConfig'
 import metamask from 'helpers/metamask'
 
-
 const isWidgetBuild = externalConfig && externalConfig.isWidget
 const isChromeExtension = externalConfig && externalConfig.dir === 'chrome-extension/application'
-const onlyEvmWallets = (externalConfig?.opts?.ui?.disableInternalWallet) ? true : false
-
+const onlyEvmWallets = !!(externalConfig?.opts?.ui?.disableInternalWallet)
 
 export const messages = defineMessages({
   wallet: {
@@ -30,17 +28,17 @@ export const messages = defineMessages({
     description: 'Menu item "History"',
     defaultMessage: 'Transactions',
   },
-  marketmaker: {
-    id: 'menu.marketmaker',
-    description: 'Menu item "Marketmaker"',
-    defaultMessage: 'Earn',
-  },
+  // marketmaker: {
+  //   id: 'menu.marketmaker',
+  //   description: 'Menu item "Marketmaker"',
+  //   defaultMessage: 'Earn',
+  // },
 })
 
 export const getMenuItems = (props) => {
   const { intl } = props
   const { exchange, wallet, createWallet, history } = messages
-  const { 
+  const {
     exchange: exchangeLink,
     quickSwap,
     createWallet: create,
@@ -85,34 +83,32 @@ export const getMenuItems = (props) => {
   ]
 
   // Marketmaker pages ********
-  if (!isWidgetBuild) {
-    const marketmakerItem = {
-      title: intl.formatMessage(messages.marketmaker),
-      link: (externalConfig.opts.ui.farmLink)
-        ? externalConfig.opts.ui.farmLink
-        : !isChromeExtension ? `${links.marketmaker}/` : `${links.marketmaker}/{MATIC}WBTC`,
-      exact: true,
-      currentPageFlag: true,
-      isExternal: (externalConfig.opts.ui.farmLink) ? true : false
-    }
+  // if (!isWidgetBuild) {
+  //   const marketmakerItem = {
+  //     title: intl.formatMessage(messages.marketmaker),
+  //     link: (externalConfig.opts.ui.farmLink)
+  //       ? externalConfig.opts.ui.farmLink
+  //       : !isChromeExtension ? `${links.marketmaker}/` : `${links.marketmaker}/{MATIC}WBTC`,
+  //     exact: true,
+  //     currentPageFlag: true,
+  //     isExternal: (externalConfig.opts.ui.farmLink) ? true : false
+  //   }
 
-    itemsWithWallet.push(marketmakerItem)
-    itemsWithoutWallet.push(marketmakerItem)
-  }
+  //   itemsWithWallet.push(marketmakerItem)
+  //   itemsWithoutWallet.push(marketmakerItem)
+  // }
 
   if (onlyEvmWallets && metamask.isConnected()) return itemsWithWallet
 
   return localStorage.getItem('isWalletCreate') === 'true'
-    || externalConfig && externalConfig.isWidget
-      ? itemsWithWallet
-      : itemsWithoutWallet
+    || externalConfig
+    && externalConfig.isWidget ? itemsWithWallet : itemsWithoutWallet
 }
-
 
 export const getMenuItemsMobile = (props, isWalletCreate, dinamicPath) => {
   const { intl } = props
   const { exchange, wallet, createWallet, history } = messages
-  const { 
+  const {
     exchange: exchangeLink,
     quickSwap,
     history: historyLink,
@@ -156,7 +152,6 @@ export const getMenuItemsMobile = (props, isWalletCreate, dinamicPath) => {
 
   if (onlyEvmWallets) return mobileItemsWithWallet
   return localStorage.getItem('isWalletCreate') === 'true'
-      ? mobileItemsWithWallet
-      : mobileItemsWithoutWallet
+    ? mobileItemsWithWallet
+    : mobileItemsWithoutWallet
 }
-

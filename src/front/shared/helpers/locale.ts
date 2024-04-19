@@ -1,7 +1,7 @@
 export const reduceMessages = result =>
   result.reduce(
     (acc, msg) => ({ ...acc, [msg.id]: msg.message || msg.defaultMessage }),
-    {}
+    {},
   )
 
 export const defaultLocale = () => navigator.language.split('-')[0]

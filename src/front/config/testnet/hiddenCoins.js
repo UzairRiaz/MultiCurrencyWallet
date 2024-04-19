@@ -13,7 +13,6 @@ export default [
   'MOVR',
   'ONE',
   'AME',
-  'PHI_V1',
   'PHI',
   'GHOST',
   'NEXT',

@@ -28,25 +28,26 @@ function Footer() {
     >
       { /* @ts-ignore */ }
       <WidthContainer styleName="container">
-        <SwitchLang />
+        {/* <SwitchLang /> */}
 
-        {!config.isWidget && (
-          <p styleName="swapDescription">
-            <FormattedMessage
-              id="FooterSwapDescription"
-              defaultMessage="Online since 2018. Check our {twitter} and {github} history"
-              values={{
-                github: <a href={links.github} target="_blank" rel="noreferrer">github</a>,
-                twitter: <a href={links.twitter} target="_blank" rel="noreferrer">twitter</a>,
-              }}
-            />
-          </p>
-        )}
-        {!config.isWidget && <SocialMenu />}
+        {/* {!config.isWidget && (
+            <p styleName="swapDescription">
+              <FormattedMessage
+                id="FooterSwapDescription"
+                defaultMessage="Online since 2018. Check our {twitter} and {github} history"
+                values={{
+                  github: <a href={links.github} target="_blank" rel="noreferrer">github</a>,
+                  twitter: <a href={links.twitter} target="_blank" rel="noreferrer">twitter</a>,
+                }}
+              />
+            </p>
+          )}
+          {!config.isWidget && <SocialMenu />} */}
 
-        {showServiceLinks && (
+        {/* {showServiceLinks && (
           <ServiceLinks versionName={version.name} versionLink={version.link} />
-        )}
+        )} */}
+        <ServiceLinks versionName="" versionLink="" />
       </WidthContainer>
     </footer>
   )

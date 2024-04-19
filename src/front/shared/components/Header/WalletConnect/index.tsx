@@ -9,7 +9,6 @@ import { AddressFormat } from 'domain/address'
 import { metamask, constants } from 'helpers'
 import actions from 'redux/actions'
 import styles from './index.scss'
-import config from 'helpers/externalConfig'
 
 function WalletConnect(props) {
   const {
@@ -21,8 +20,6 @@ function WalletConnect(props) {
   const web3Type = metamask.web3connect.getInjectedType()
   const isNotAvailableMetamaskNetwork = isMetamaskConnected && !metamask.isAvailableNetwork()
   const disconnectedOrNetworkNotAvailable = !isMetamaskConnected || isNotAvailableMetamaskNetwork
-
-  if (web3Type == 'NONE' && !config.opts.hasWalletConnect) return null
 
   const connectWallet = () => {
     metamask.handleConnectMetamask({
@@ -52,7 +49,7 @@ function WalletConnect(props) {
           : connectWallet
       }
     >
-      {disconnectedOrNetworkNotAvailable
+      {/* {disconnectedOrNetworkNotAvailable
         ? (
           <Coin
             size={40}
@@ -64,7 +61,7 @@ function WalletConnect(props) {
             size={30}
             name={currencyName}
           />
-        )}
+        )} */}
       <span styleName={`connectWalletText ${disconnectedOrNetworkNotAvailable ? '' : 'hasCoinIcon'}`}>
         {isNotAvailableMetamaskNetwork
           ? <FormattedMessage id="UnknownNetworkConnectedWallet" defaultMessage="Unknown Network" />
@@ -75,7 +72,7 @@ function WalletConnect(props) {
                 format={AddressFormat.Short}
               />
             )
-            : <FormattedMessage id="Exchange_ConnectAddressOption" defaultMessage="Connect Wallet" />}
+            : <FormattedMessage id="Exchange_ConnectAddressOption" defaultMessage="Connect External Wallet" />}
       </span>
     </div>
   )

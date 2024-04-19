@@ -1,14 +1,18 @@
 import { BigNumber } from 'bignumber.js'
 import { FormattedMessage, injectIntl } from 'react-intl'
 import CSSModules from 'react-css-modules'
-import styles from './index.scss'
 import getCoinInfo from 'common/coins/getCoinInfo'
 import { inputReplaceCommaWithDot } from 'helpers/domUtils'
 import Input from 'components/forms/Input/Input'
 import CurrencySelect from 'components/ui/CurrencySelect/CurrencySelect'
 import Tooltip from 'components/ui/Tooltip/Tooltip'
+import CurrencyIcon from 'components/ui/CurrencyIcon/CurrencyIcon'
+import React from 'react'
+import Option from 'components/ui/CurrencySelect/Option/Option'
+import styles from './index.scss'
+import SelectedOption from "components/ui/CurrencySelect/Option/SelectedOption";
 
-const SelectGroup = (props) => {
+function SelectGroup(props) {
   const {
     dynamicFee,
     isToken,
@@ -39,7 +43,9 @@ const SelectGroup = (props) => {
   } = props
 
   const doNothing = () => {}
-  const currAllowed = currencies.filter((item) => !item.dontCreateOrder)
+  let currAllowed = currencies.filter((item) => !item.dontCreateOrder)
+  currAllowed =   [...new Map(currAllowed.map((item) => [item.value, item])).values()]
+
   const canСalculate = balance && dynamicFee
 
   return (
@@ -66,25 +72,25 @@ const SelectGroup = (props) => {
           pattern="0-9\."
           errorStyle={error}
           disabled={disabled}
-          onFocus={onFocus ? onFocus : doNothing}
-          onBlur={onBlur ? onBlur : doNothing}
-          onKeyUp={onKeyUp ? onKeyUp : doNothing}
+          onFocus={onFocus || doNothing}
+          onBlur={onBlur || doNothing}
+          onKeyUp={onKeyUp || doNothing}
           onKeyDown={inputReplaceCommaWithDot}
           dontDisplayError={dontDisplayError}
         />
         {fiat > 0 && (
           <p styleName="textUsd">
-            {`~${fiat}`} {activeFiat}
+            {`~${fiat}`}
+            {' '}
+            {activeFiat}
           </p>
         )}
         {inputToolTip && inputToolTip}
 
         <CurrencySelect
-          selectedItemRender={(item) => {
-            const { blockchain } = getCoinInfo(item.value)
-
-            return blockchain ? `${item.title.replaceAll('*','')} (${blockchain})` : item.fullTitle
-          }}
+          selectedItemRender={(item) => (
+            <SelectedOption {...item} />
+          )}
           styleName="currencySelect"
           placeholder="Enter the name of coin"
           selectedValue={selectedValue}
@@ -92,14 +98,14 @@ const SelectGroup = (props) => {
           currencies={currAllowed}
         />
       </div>
-      {label?.props?.defaultMessage === 'You sell' &&
-        !extendedControls &&
-        (canСalculate ? (
+      {label?.props?.defaultMessage === 'You sell'
+        && !extendedControls
+        && (canСalculate ? (
           !isToken && (
             <span
               styleName={
-                new BigNumber(balance).isLessThan(new BigNumber(haveAmount).plus(dynamicFee)) &&
-                new BigNumber(haveAmount).isGreaterThan(0)
+                new BigNumber(balance).isLessThan(new BigNumber(haveAmount).plus(dynamicFee))
+                && new BigNumber(haveAmount).isGreaterThan(0)
                   ? 'red'
                   : 'balance'
               }
@@ -109,9 +115,12 @@ const SelectGroup = (props) => {
                 defaultMessage="Available for exchange: {availableBalance} {tooltip}"
                 values={{
                   availableBalance: `${new BigNumber(balance).minus(
-                    dynamicFee
+                    dynamicFee,
                   )} ${selectedValue.toUpperCase()}`,
-                  tooltip: <Tooltip id={idFee}> {tooltipAboutFee}</Tooltip>,
+                  tooltip: <Tooltip id={idFee}>
+                    {' '}
+                    {tooltipAboutFee}
+                  </Tooltip>,
                 }}
               />
             </span>

@@ -106,7 +106,7 @@ const webpackConfig = {
       },
     }),
     new HtmlWebpackPlugin({
-      title: 'Hot Wallet with p2p exchange',
+      title: 'KAXAA eWallet',
       isWidget: config.isWidget,
       isBinanceBuild: config.binance,
       template: config.paths.client('index.html'),

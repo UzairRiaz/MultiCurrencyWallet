@@ -2,18 +2,16 @@ import React, { Component, Fragment } from 'react'
 import { NavLink, withRouter } from 'react-router-dom'
 import CSSModules from 'react-css-modules'
 import { injectIntl } from 'react-intl'
-import styles from './Nav.scss'
 import { localisedUrl } from 'helpers/locale'
 import config from 'helpers/externalConfig'
-
-
+import styles from './Nav.scss'
 
 type NavProps = {
   menu: IUniversalObj[]
   intl: any
 }
 
-//@ts-ignore: strictNullChecks
+// @ts-ignore: strictNullChecks
 @withRouter
 @CSSModules(styles, { allowMultiple: true })
 class Nav extends Component<NavProps, null> {
@@ -27,7 +25,7 @@ class Nav extends Component<NavProps, null> {
     const afterMenuItems = config.opts.ui.menu.after
 
     return (
-      <div styleName='nav'>
+      <div styleName='nav' className='mobile-header-nav'>
         {beforeMenuItems && beforeMenuItems.length > 0 && (
           <>
           {
@@ -56,7 +54,7 @@ class Nav extends Component<NavProps, null> {
 
               return (
                 <div styleName='mainMenu' key={index} className="data-tut-widget-tourFinish">
-                  {isExternal ? (
+                  {isExternal  ? (
                     <a
                       href={link}
                       target="_blank"
@@ -65,6 +63,7 @@ class Nav extends Component<NavProps, null> {
                       {title}
                     </a>
                   ) : (
+                    localStorage.getItem('kasa:token') &&
                     <NavLink
                       key={index}
                       exact={exact}

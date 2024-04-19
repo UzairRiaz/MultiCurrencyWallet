@@ -3,11 +3,13 @@ import ws from 'ws'
 import REST from '../cli/interface'
 import { getOrderId } from './helpers/getOrderId'
 
-
 class SocketBot {
   isAutoAccepting: boolean
+
   isAutoSearching: boolean
+
   ws: ws
+
   worker: REST
 
   constructor(worker, url) {
@@ -21,9 +23,9 @@ class SocketBot {
   }
 
   async until(_event) {
-    return new Promise (resolve => {
-      this.ws.on('message', mess => {
-        mess = JSON.parse(mess)
+    return new Promise(resolve => {
+      this.ws.on('message', message => {
+        const mess = JSON.parse(message.toString())
 
         if (mess.type === _event) resolve(mess.payload)
         if (mess.type === _event) console.dir(mess)
@@ -67,11 +69,10 @@ class SocketBot {
     this.isAutoSearching = true
 
     this.worker.data.orders.map(order => {
-      console.log('thinking of ' + order.string)
+      console.log(`thinking of ${order.string}`)
       this.worker.algo.priceFits(order)
       this.fastSwap(order)
     })
-
 
     this.ws.on('new order', mess => {
       if (!this.isAutoSearching) return
@@ -81,10 +82,9 @@ class SocketBot {
 
       const order = mess.payload
 
-      console.log('thinking of ' + order.string)
+      console.log(`thinking of ${order.string}`)
       // also that he has enough balance
-      if (this.worker.algo.priceFits(order))
-        this.fastSwap(order)
+      if (this.worker.algo.priceFits(order)) this.fastSwap(order)
     })
 
     //
@@ -107,10 +107,10 @@ class SocketBot {
 
     return this.worker.runMethod(`swaps/${id}/go`)
 
-    if (flow.type == "BTC2ETH" || flow.type == "BTC2ETHTOKEN") {
+    if (flow.type == 'BTC2ETH' || flow.type == 'BTC2ETHTOKEN') {
       await this.worker.runMethod(`swaps/${id}/sign`)
       await this.worker.runMethod(`swaps/${id}/verify-btc-script`)
-    } else if (flow.type == "ETH2BTC" || flow.type == "ETHTOKEN2BTC") {
+    } else if (flow.type == 'ETH2BTC' || flow.type == 'ETHTOKEN2BTC') {
       await this.worker.runMethod(`swaps/${id}/submit-secret`)
     }
 

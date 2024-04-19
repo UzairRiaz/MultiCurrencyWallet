@@ -14,7 +14,6 @@ if (process.env.ACTIONS) {
   }/index.html`
 }
 
-console.log('>>>> START TEST', process.env.NODE_ENV)
 // if it's true then you will be able to see puppeteer's browser
 // don't enable this mode in Github test flows. They don't work with that
 const isDebug = false
@@ -49,20 +48,6 @@ type ImportWalletParams = {
   timeout?: number
 }
 
-export const waitSlowLoadSelector = async (page, selector, timeout, throwCount) => {
-  if (throwCount === 0) return false
-  try {
-    let element = await page.waitForSelector(selector, {
-      timeout,
-    })
-    if (element !== null) {
-      return true
-    }
-  } catch (e) { }
-
-  return await waitSlowLoadSelector(page, selector, timeout, throwCount-1)
-}
-
 export const importWallet = async (params: ImportWalletParams) => {
   const { page, seed, timeout = 30_000 } = params
 
@@ -72,8 +57,6 @@ export const importWallet = async (params: ImportWalletParams) => {
   })
   // app creation
   await timeOut(30_000)
-
-  await page.click('#restoreWalletUseMnemonic')
 
   await page.waitForSelector('.react-tags__search-input', {
     timeout,
@@ -98,10 +81,9 @@ export const importWallet = async (params: ImportWalletParams) => {
 
   await page.click('#walletRecoveryButton')
 
-  const isRecovered = await waitSlowLoadSelector(page, '#finishWalletRecoveryButton', timeout, 20)
-  if (!isRecovered) {
-    throw new Error('Recovery timeout')
-  }
+  await page.waitForSelector('#finishWalletRecoveryButton', {
+    timeout,
+  })
 
   await page.click('#finishWalletRecoveryButton')
 }
@@ -150,10 +132,7 @@ export const addTokenToWallet = async (params) => {
       selector: '#customTokenNextButton',
     })
 
-    const isTokenFetched = await waitSlowLoadSelector(page, `#customTokenAddButton`, 60_000, 20)
-    if (!isTokenFetched) {
-      throw new Error('Add token fetch timeout')
-    }
+    await page.waitForSelector('#customTokenAddButton')
 
     await clickOn({
       page,
@@ -240,5 +219,4 @@ export default {
   turnOnMM,
   takeScreenshot,
   timeOut,
-  waitSlowLoadSelector,
 }

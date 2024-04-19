@@ -8,7 +8,7 @@ export class QuickSwapFormTour extends Component<any, any> {
     super(props)
 
     this.state = {
-      run: true,
+      run: false,
       steps: [
         {
           content: (
@@ -42,8 +42,9 @@ export class QuickSwapFormTour extends Component<any, any> {
 
   render() {
     const { run, steps } = this.state
-    const { closeTour, isTourOpen } = this.props
-
+    // const { closeTour, isTourOpen } = this.props
+    const { closeTour } = this.props
+    const isTourOpen = false
     return (
       <div className="demo-wrapper">
         {isTourOpen && (

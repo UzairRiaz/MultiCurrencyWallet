@@ -12,15 +12,17 @@ import Button from 'components/controls/Button/Button'
 import Tooltip from 'shared/components/ui/Tooltip/Tooltip'
 import Table from 'components/tables/Table/Table'
 import ConnectWalletModal from 'components/modals/ConnectWalletModal/ConnectWalletModal'
-import Slider from './WallerSlider'
+// import Slider from './WallerSlider'
+import { useEffect, useState } from 'react'
 import Row from './Row/Row'
 import styles from './Wallet.scss'
 
 const addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase = config?.opts?.addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase
 const noInternalWallet = config?.opts?.ui?.disableInternalWallet
-const isWidgetBuild = config && config.isWidget
+// const isWidgetBuild = config && config.isWidget
 
 type CurrenciesListProps = {
+  subHeading: string
   multisigPendingCount: number
   goToСreateWallet: () => void
   hiddenCoinsList: string[]
@@ -28,6 +30,17 @@ type CurrenciesListProps = {
 }
 
 function CurrenciesList(props: CurrenciesListProps) {
+
+  const [availableKaxaa, setAvailableKaxaa] = useState(null)
+
+  const once = true
+
+  useEffect(() => {
+    actions.erc20matic.getAvailableBalance('kaxaa').then((balance) => {
+      setAvailableKaxaa(balance)
+    })
+  }, [once])
+
   const {
     tableRows,
     goToСreateWallet,
@@ -45,17 +58,23 @@ function CurrenciesList(props: CurrenciesListProps) {
   const showAssets = !(config?.opts?.ui?.disableInternalWallet)
     ? true
     : !!(metamask.isConnected())
+
   return (
     <div styleName="yourAssets">
       {showAssets && (
         <>
-          {(exConfig && exConfig.opts && exConfig.opts.showWalletBanners) || isWidgetBuild ? (
+          {/* {(exConfig && exConfig.opts && exConfig.opts.showWalletBanners) || isWidgetBuild ? (
             <Slider multisigPendingCount={multisigPendingCount} />
           ) : (
             ''
-          )}
+          )} */}
           <h3 styleName="yourAssetsHeading">
-            <FormattedMessage id="YourAssets" defaultMessage="Your assets" />
+            <small>
+              <FormattedMessage id="YourAssets" defaultMessage="Your assets" />
+              :
+            </small>
+            {' '}
+            {props.subHeading}
           </h3>
           <div styleName="yourAssetsDescr">
             <FormattedMessage
@@ -66,19 +85,21 @@ function CurrenciesList(props: CurrenciesListProps) {
 
           <Table
             className={`${styles.walletTable} data-tut-address`}
-            rows={tableRows}
+            rows={tableRows.filter((item) => true, // ['KAXAA', 'MATIC', 'USDC'].includes(item.currency)
+            ).sort((a, b) => a.fullName.localeCompare(b.fullName))}
             rowRender={(row, index) => (
               <Row
                 key={index}
                 currency={row}
-                itemData={row}
+                itemData={{ ...row, ...{ availableKaxaa } }}
               />
             )}
           />
           <div styleName="addCurrencyBtnWrapper">
-            <Button id="addCustomTokenBtn" onClick={openAddCustomTokenModal} transparent fullWidth>
-              <FormattedMessage id="addCustomToken" defaultMessage="Add custom token" />
-            </Button>
+            {/* add custom token */}
+            {/* <Button id="addCustomTokenBtn" onClick={openAddCustomTokenModal} transparent fullWidth> */}
+            {/*  <FormattedMessage id="addCustomToken" defaultMessage="Add custom token" /> */}
+            {/* </Button> */}
             {addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase && !noInternalWallet && (
               <Button onClick={handleRestoreMnemonic} small link>
                 <FormattedMessage id="ImportKeys_RestoreMnemonic" defaultMessage="Restore from 12-word seed" />
@@ -101,11 +122,11 @@ function CurrenciesList(props: CurrenciesListProps) {
                 </Tooltip>
               </Button>
             )}
-            {!addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase && (
+            {/* {!addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase && (
               <Button id="addAssetBtn" onClick={goToСreateWallet} transparent fullWidth>
                 <FormattedMessage id="addAsset" defaultMessage="Add currency" />
               </Button>
-            )}
+            )} */}
           </div>
         </>
       )}

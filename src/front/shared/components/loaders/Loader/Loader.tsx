@@ -3,6 +3,7 @@ import CSSModules from "react-css-modules"
 import styles from "./Loader.scss"
 import { FormattedMessage } from "react-intl"
 import config from "app-config"
+import logoColored from "../../../../shared/images/logo/logo-colored.svg";
 
 const isWidget = config && config.isWidget
 
@@ -25,7 +26,10 @@ const Loader = (props: LoaderProps) => {
     <div styleName="overlay" className={overlayClassName}>
       <div>
         {window.loaderLogoUrl && (
-          <img styleName="loaderImg" src={window.loaderLogoUrl} alt="Loader logo"/>
+          // <img styleName="loaderImg" src={window.loaderLogoUrl} alt="Loader logo"/>
+          <div style={{textAlign: 'center'}}>
+            <img styleName="loaderImg" src={logoColored} alt="Loader logo"/>
+          </div>
         )}
         {data && data.txId && (
           <p styleName="text">

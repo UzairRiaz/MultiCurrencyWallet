@@ -30,7 +30,7 @@ const init = (app, SwapApp, router, port) => {
     )
 
   const interval = setInterval(() => {
-    wss.clients.forEach((ws) => {
+    wss.clients.forEach((ws: any) => {
       if (ws.isAlive === false)
         return ws.terminate()
 
@@ -60,7 +60,7 @@ const init = (app, SwapApp, router, port) => {
     }
   }
 
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws: any) => {
     ws.isAlive = true
 
     ws.on('pong', () => (ws.isAlive = true))

@@ -17,14 +17,13 @@ import styles from './ConnectWalletModal.scss'
   dashboardModalsAllowed,
 }))
 @cssModules(styles, { allowMultiple: true })
-class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; currentBaseCurrency: string, hasWalletConnect: boolean }> {
+class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; currentBaseCurrency: string}> {
   constructor(props) {
     super(props)
 
     this.state = {
-      choseNetwork: false,
-      hasWalletConnect: false,
-      currentBaseCurrency: '',
+      choseNetwork: true,
+      currentBaseCurrency: 'MATIC',
     }
   }
 
@@ -44,11 +43,12 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
     } = this.props
 
     if (connected) {
-      if (!dontRedirect) this.goToPage(links.home)
+      window.location.reload();
+      // if (!dontRedirect) this.goToPage(links.home)
       if (typeof onResolve === `function`) {
         onResolve(true)
       }
-      actions.modals.close(name)
+      // actions.modals.close(name)
     }
   }
 
@@ -74,7 +74,6 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
   handleInjected = async () => {
     const { currentBaseCurrency } = this.state
     const web3connect = this.newWeb3connect()
-
     web3connect.connectTo(SUPPORTED_PROVIDERS.INJECTED).then(async (connected) => {
       if (!connected && web3connect.isLocked()) {
         actions.modals.open(constants.modals.AlertModal, {
@@ -86,6 +85,7 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
           ),
         })
       } else {
+        console.log('here ==== here ==== here');
         if (!metamask.isAvailableNetworkByCurrency(currentBaseCurrency)) {
           await metamask.switchNetwork(currentBaseCurrency)
         }
@@ -98,9 +98,15 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
   handleWalletConnect = () => {
     const web3connect = this.newWeb3connect()
 
+    setTimeout(() => {
+      const tabWrapper = document.getElementsByClassName('walletconnect-modal__mobile__toggle')[0] as HTMLElement
+      const desktopTab = tabWrapper.children[2] as HTMLElement
+      desktopTab.click()
+      tabWrapper.style.display = 'none'
+    },
+    200)
     web3connect.connectTo(SUPPORTED_PROVIDERS.WALLETCONNECT).then(async (connected) => {
       await metamask.web3connectInit()
-
       this.onConnectLogic(connected)
     })
   }
@@ -114,12 +120,11 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
     return metamask.getWeb3connect()
   }
 
-  setNetwork = async (coinName, hasWalletConnect) => {
+  setNetwork = async (coinName) => {
     const { currentBaseCurrency } = this.state
 
     this.setState(() => ({
       choseNetwork: true,
-      hasWalletConnect: (externalConfig.opts.hasWalletConnect && hasWalletConnect),
     }))
 
     if (currentBaseCurrency !== coinName) {
@@ -131,12 +136,11 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
 
   render() {
     const { dashboardModalsAllowed, noCloseButton } = this.props
-    const { choseNetwork, currentBaseCurrency, hasWalletConnect } = this.state
+    const { choseNetwork, currentBaseCurrency } = this.state
 
     const web3Type = metamask.web3connect.getInjectedType()
     const web3Icon = (web3Icons[web3Type] && web3Type !== `UNKNOWN` && web3Type !== `NONE`) ? web3Icons[web3Type] : false
     const walletConnectIcon = web3Icons.WALLETCONNECT
-
 
     return (
       <div
@@ -161,11 +165,18 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
           <div styleName="notification-overlay">
             <div styleName="stepWrapper">
               <h3 styleName="title">
-                <FormattedMessage id="chooseNetwork" defaultMessage="Choose network" />
+                <FormattedMessage id="chooseNetwork" defaultMessage="Polygon network automatically selected" />
               </h3>
               <div styleName="options">
                 {Object.values(externalConfig.evmNetworks)
-                  .filter((network: any) => externalConfig.opts.curEnabled[network.currency.toLowerCase()])
+                  .filter((network: any) => {
+
+                    if(network.currency.toLowerCase() === 'eth'){
+                      return false;
+                    }
+                    
+                    return externalConfig.opts.curEnabled[network.currency.toLowerCase()]
+                  })
                   .map(
                     (
                       item: EvmNetworkConfig,
@@ -175,7 +186,7 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
                         type="button"
                         key={index}
                         styleName={`option ${currentBaseCurrency === item.currency ? 'selected' : ''}`}
-                        onClick={() => this.setNetwork(item.currency, item.hasWalletConnect)}
+                        onClick={() => this.setNetwork(item.currency)}
                       >
                         <Coin size={50} name={item.currency.toLowerCase()} />
                         <span styleName="chainName">{item.chainName.split(' ')[0]}</span>
@@ -185,33 +196,29 @@ class ConnectWalletModal extends React.Component<any, { choseNetwork: boolean; c
               </div>
             </div>
 
-            {choseNetwork && (
-              <div styleName={`stepWrapper ${choseNetwork ? '' : 'disabled'}`}>
-                <h3 styleName="title">
-                  <FormattedMessage id="chooseWallet" defaultMessage="Choose wallet" />
-                </h3>
-                <div styleName="options">
-                  {metamask.web3connect.isInjectedEnabled() && (
-                    <div styleName="provider">
-                      <Button brand onClick={this.handleInjected}>
-                        {web3Icon && (
-                          <img src={web3Icon} alt={metamask.web3connect.getInjectedTitle()} />
-                        )}
-                        {metamask.web3connect.getInjectedTitle()}
-                      </Button>
-                    </div>
-                  )}
-                  {hasWalletConnect && (
-                    <div styleName="provider">
-                      <Button brand onClick={this.handleWalletConnect}>
-                        <img src={walletConnectIcon} alt="WalletConnect" />
-                        <FormattedMessage id="ConnectWalletModal_WalletConnect" defaultMessage="WalletConnect" />
-                      </Button>
-                    </div>
-                  )}
+            <div styleName={`stepWrapper ${choseNetwork ? '' : 'disabled'}`}>
+              <h3 styleName="title">
+                <FormattedMessage id="chooseWallet" defaultMessage="Choose wallet" />
+              </h3>
+              <div styleName="options">
+                {metamask.web3connect.isInjectedEnabled() && (
+                  <div styleName="provider">
+                    <Button brand onClick={this.handleInjected}>
+                      {web3Icon && (
+                        <img src={web3Icon} alt={metamask.web3connect.getInjectedTitle()} />
+                      )}
+                      {metamask.web3connect.getInjectedTitle()}
+                    </Button>
+                  </div>
+                )}
+                <div styleName="provider">
+                  <Button brand onClick={this.handleWalletConnect}>
+                    <img src={walletConnectIcon} alt="WalletConnect" />
+                    <FormattedMessage id="ConnectWalletModal_WalletConnect" defaultMessage="WalletConnect" />
+                  </Button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

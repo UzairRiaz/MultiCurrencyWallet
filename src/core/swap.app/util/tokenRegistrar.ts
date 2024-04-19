@@ -131,14 +131,6 @@ export default {
     isCoinAddress: typeforce.isCoinAddress.XDAI,
     isPublicKey: typeforce.isPublicKey.XDAI,
   }),
-  phi20_v1: new TokenRegistrar({
-    blockchainType: BLOCKCHAIN_TYPE.PHI_V1,
-    tokenStandard: TOKEN_STANDARD.PHI20_V1,
-    coinType: COIN_TYPE.PHI_V1_TOKEN,
-    blockchainModel: COIN_DATA.PHI_V1.model,
-    isCoinAddress: typeforce.isCoinAddress.PHI_V1,
-    isPublicKey: typeforce.isPublicKey.PHI_V1,
-  }),
   phi20: new TokenRegistrar({
     blockchainType: BLOCKCHAIN_TYPE.PHI,
     tokenStandard: TOKEN_STANDARD.PHI20,
@@ -146,21 +138,5 @@ export default {
     blockchainModel: COIN_DATA.PHI.model,
     isCoinAddress: typeforce.isCoinAddress.PHI,
     isPublicKey: typeforce.isPublicKey.PHI,
-  }),
-  fkw20: new TokenRegistrar({
-    blockchainType: BLOCKCHAIN_TYPE.FKW,
-    tokenStandard: TOKEN_STANDARD.FKW20,
-    coinType: COIN_TYPE.FKW_TOKEN,
-    blockchainModel: COIN_DATA.FKW.model,
-    isCoinAddress: typeforce.isCoinAddress.FKW,
-    isPublicKey: typeforce.isPublicKey.FKW,
-  }),
-  phpx20: new TokenRegistrar({
-    blockchainType: BLOCKCHAIN_TYPE.PHPX,
-    tokenStandard: TOKEN_STANDARD.PHPX20,
-    coinType: COIN_TYPE.PHPX_TOKEN,
-    blockchainModel: COIN_DATA.PHPX.model,
-    isCoinAddress: typeforce.isCoinAddress.PHPX,
-    isPublicKey: typeforce.isPublicKey.PHPX,
   }),
 }

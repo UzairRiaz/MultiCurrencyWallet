@@ -20,6 +20,7 @@
   .usd {
     min-height: 13px; // top element does not go down if no currency
     color: var(--color-notice);
+    &:empty {display: none;}
   }
 
   @media screen and (max-width: 480px) {
@@ -64,6 +65,11 @@
   display: flex;
   align-items: center;
   cursor: pointer;
+  border-radius: 7px;;
+  -webkit-border-radius: 7px;;
+  -moz-border-radius: 7px;;
+  -ms-border-radius: 7px;;
+  -o-border-radius: 7px;;
 
   div {
     display: flex;

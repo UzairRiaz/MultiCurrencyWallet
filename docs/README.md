@@ -4,15 +4,17 @@
 ![Custom badge](https://img.shields.io/endpoint?label=SWAP%20token%20price&url=https%3A%2F%2Fwallet.wpmix.net%2FtokenPrice%2F%3Fnetwork%3Dbsc%26address%3D0x92648e4537cdfa1ee743a244465a31aa034b1ce8%26round%3D2%26color%3Dgreen)
     
 ## MultiCurrencyWallet
-            
+          
 - 👛 Crypto wallet: BTC, ETН (ERC20), BSC (BEP20), Matic (+tokens), USDT, {your_token}...
-- 💵 Fiat gateway: USD, EUR, RUB, UAH... via itez.com ; 
+- 💵 Fiat gateway: USD, EUR, RUB, UAH... via itez.com
 - ⚛️ P2P exchange – atomic swaps
 - 💡 Open-source, client-side
 - 📦 Embeddable into your site!
 - One-click WhiteLablel deply to AWS https://aws.amazon.com/marketplace/pp/prodview-jyrrj4txg5u3a
 
-Live demo here:  https://swaponline.github.io
+Live demo here: 
+https://swaponline.io (mirror https://swaponline.github.io) . Testnet https://ropsten.swaponline.io/
+<br> Binance  Smart Chin : https://bsc.swap.io/ . Testnet: https://bsc-testnet.swaponline.site/
 
 
 No coding skills? Use :package: [WordPress plugin with admin panel](https://codecanyon.net/item/multicurrency-crypto-wallet-and-exchange-widgets-for-wordpress/23532064) :package: 

@@ -49,7 +49,6 @@ export enum BlockReasons {
   NoBaseCurrencyBalance,
   Liquidity,
   PairDoesNotExist,
-  NotApproved,
   Unknown,
 }
 

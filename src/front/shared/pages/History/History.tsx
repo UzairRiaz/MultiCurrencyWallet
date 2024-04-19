@@ -3,18 +3,16 @@ import { FormattedMessage, injectIntl } from 'react-intl'
 import CSSModules from 'react-css-modules'
 import { connect } from 'redaction'
 import actions from 'redux/actions'
-import Row from './Row/Row'
 import styles from 'components/tables/Table/Table.scss'
-import stylesHere from './History.scss'
-import { externalConfig } from 'helpers'
+// import { externalConfig } from 'helpers'
 import InfiniteScrollTable from 'components/tables/InfiniteScrollTable/InfiniteScrollTable'
 import ContentLoader from 'components/loaders/ContentLoader/ContentLoader'
 import FilterForm from 'components/FilterForm/FilterForm'
-import InvoicesList from 'pages/Invoices/InvoicesList'
+// import InvoicesList from 'pages/Invoices/InvoicesList'
 import SwapsHistory from 'pages/History/SwapsHistory/SwapsHistory'
-
 import { onInit as onSwapCoreInited } from 'instances/newSwap'
-
+import stylesHere from './History.scss'
+import Row from './Row/Row'
 
 const filterHistory = (items, filter) => {
   if (filter === 'sent') {
@@ -46,13 +44,26 @@ class History extends Component<any, any> {
   constructor(props) {
     super(props)
 
+    // if (window.performance) {
+    //   if (performance.navigation.type === 1) {
+    //     console.log('reloaded')
+    //     window.location.href = '#/wallet'
+    //     setTimeout(() => {
+    //       window.location.href = '#/history'
+    //     }, 500)
+    //
+    //   } else {
+    //     // alert( "This page is not reloaded");
+    //   }
+    // }
+
     const {
       items,
       match: {
         params: {
           page = null,
-        }
-      }
+        },
+      },
     } = props
 
     const commentsList = actions.comments.getComments()
@@ -60,15 +71,17 @@ class History extends Component<any, any> {
     this.state = {
       page,
       items,
-      filterValue: "",
+      filterValue: '',
       isLoading: false,
       renderedItems: 10,
-      commentsList: commentsList || null
+      commentsList: commentsList || null,
     }
   }
 
   componentDidMount() {
+    this.setState(() => ({ isLoading: true }))
     actions.user.setTransactions()
+    this.setState(() => ({ isLoading: false }))
 
     onSwapCoreInited(() => {
       actions.core.getSwapHistory()
@@ -140,7 +153,7 @@ class History extends Component<any, any> {
 
     this.loading()
     const { items } = this.props
-    this.setState(() => ({ filterValue: "" }))
+    this.setState(() => ({ filterValue: '' }))
 
     this.createItemsState(items)
   }
@@ -151,52 +164,50 @@ class History extends Component<any, any> {
     const titles = []
 
     return (
-      <Fragment>
-      <section styleName="history">
-        <h3 styleName="historyHeading">
-          <FormattedMessage id="History_Activity_Title" defaultMessage="Activity" />
-        </h3>
-        {items ? (
-          <div>
-            <FilterForm
-              filterValue={filterValue}
-              onSubmit={this.handleFilter}
-              onChange={this.handleFilterChange}
-              resetFilter={this.resetFilter}
-            />
+      <>
+        <section styleName="history">
+          <h3 styleName="historyHeading">
+            <FormattedMessage id="History_Activity_Title" defaultMessage="Activity" />
+          </h3>
+          {items ? (
             <div>
-              {
-                items.length > 0 && !isLoading ? (
-                  <InfiniteScrollTable
-                    className={styles.history}
-                    titles={titles}
-                    bottomOffset={400}
-                    getMore={this.loadMore}
-                    itemsCount={items.length}
-                    items={items.slice(0, this.state.renderedItems)}
-                    rowRender={this.rowRender}
-                  />
-                ) : (
-                  <ContentLoader rideSideContent empty={!isLoading} nonHeader />
-                )
-              }
+              <FilterForm
+                filterValue={filterValue}
+                onSubmit={this.handleFilter}
+                onChange={this.handleFilterChange}
+                resetFilter={this.resetFilter}
+              />
+              <div>
+                {
+                  items.length > 0 && !isLoading ? (
+                    <InfiniteScrollTable
+                      className={styles.history}
+                      titles={titles}
+                      bottomOffset={400}
+                      getMore={this.loadMore}
+                      itemsCount={items.length}
+                      items={items.slice(0, this.state.renderedItems)}
+                      rowRender={this.rowRender}
+                    />
+                  ) : (
+                    <ContentLoader rideSideContent empty={!isLoading} nonHeader />
+                  )
+                }
+              </div>
             </div>
-          </div>
           ) : (
             <div styleName="historyLoader">
               <ContentLoader rideSideContent />
             </div>
-          )
-        }
-      </section>
+          )}
+        </section>
 
-      {externalConfig.opts.invoiceEnabled && <InvoicesList onlyTable />}
+        {/* {externalConfig.opts.invoiceEnabled && <InvoicesList onlyTable />} */}
 
-      { swapHistory.length > 0 &&
-        <SwapsHistory orders={swapHistory.filter((item) => item.step >= 1)} />
-      }
+        { swapHistory.length > 0
+        && <SwapsHistory orders={swapHistory.filter((item) => item.step >= 1)} />}
 
-      </Fragment>
+      </>
     )
   }
 }

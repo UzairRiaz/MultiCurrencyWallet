@@ -132,6 +132,21 @@ tr button[disabled]:hover {
   margin-left: 2px;
 }
 
+.assetsTableCurrencyBalanceInFiat{
+  text-align: right;
+  font-weight: bold;
+  font-size: 0.8em;
+  display: block;
+  color: gray;
+}
+
+.assetCurrentRate{
+  margin-left: 20px;
+  text-align: right;
+  font-weight: bold;
+  color: gray;
+}
+
 .addressStyle,
 .showAddressStyle,
 .statusStyle {
@@ -143,6 +158,8 @@ tr button[disabled]:hover {
   left: 46px;
   bottom: -18px;
 }
+
+.addressStyle p {font-weight: 500;}
 
 .showAddressStyle {
   cursor: pointer;
@@ -321,7 +338,7 @@ tr button[disabled]:hover {
   .assetsTableCurrencyWrapper {
     position: absolute;
     right: 45px;
-    top: 0px;
+    top: 20px;
     font-size: 15px;
   }
 }

@@ -10,9 +10,9 @@ import TOKEN_STANDARDS, { EXISTING_STANDARDS } from 'helpers/constants/TOKEN_STA
 import actions from 'redux/actions'
 import { getState } from 'redux/core'
 import reducers from 'redux/core/reducers'
-import { getActivatedCurrencies } from 'helpers/user'
+import { getLocal } from '@walletconnect/utils'
 
-const onlyEvmWallets = (config?.opts?.ui?.disableInternalWallet) ? true : false
+const onlyEvmWallets = !!(config?.opts?.ui?.disableInternalWallet)
 const enabledCurrencies = config.opts.curEnabled
 
 /*
@@ -27,7 +27,7 @@ const initReducerState = () => {
     },
   } = getState()
 
-  if (!activeCurrency) reducers.user.setActiveCurrency({ activeCurrency: 'BTC' })
+  if (!activeCurrency) reducers.user.setActiveCurrency({ activeCurrency: 'KAX' })
   if (!activeFiat) reducers.user.setActiveFiat({ activeFiat: window.DEFAULT_FIAT || 'USD' })
 
 }
@@ -77,26 +77,10 @@ const sign = async () => {
     initReducerState()
 
     let mnemonic = localStorage.getItem(constants.privateKeyNames.twentywords)
-    let needGenerateShamirSecret = false
-    const shamirsMnemonics = localStorage.getItem(constants.privateKeyNames.shamirsMnemonics)
 
     if (!mnemonic) {
       mnemonic = mnemonicUtils.getRandomMnemonicWords()
       localStorage.setItem(constants.privateKeyNames.twentywords, mnemonic)
-      needGenerateShamirSecret = true
-    } else if (mnemonic !== `-`) {
-      needGenerateShamirSecret = true
-    }
-    // Generate Shamir's Secret-Sharing for Mnemonic Codes
-    if (needGenerateShamirSecret && !shamirsMnemonics) {
-      const shamirsSharing = mnemonicUtils.splitMnemonicToSecretParts(mnemonic)
-      localStorage.setItem(constants.privateKeyNames.shamirsMnemonics, JSON.stringify(shamirsSharing.mnemonics))
-      localStorage.setItem(
-        constants.privateKeyNames.shamirsSecrets,
-        JSON.stringify(
-          shamirsSharing.secretParts.map((secretPart) => secretPart.toString())
-        )
-      )
     }
 
     const btcPrivateKey = localStorage.getItem(constants.privateKeyNames.btc)
@@ -240,6 +224,12 @@ const customRate = (cur) => {
 }
 
 const getExchangeRate = (sellCurrency, buyCurrency): Promise<number> => {
+
+  if (['{matic}kaxaa'].includes(sellCurrency)) {
+    return  new Promise(resolve => {
+      resolve(parseFloat(getLocal('kaxa:index')))
+    })
+  }
   const sellDataRate = customRate(sellCurrency)
   const buyDataRate = customRate(buyCurrency)
 
@@ -294,51 +284,7 @@ const customTokenExchangeRate = (name) => {
   return ''
 }
 
-const getInfoAboutPHI = (fiat, btcPrice) => new Promise((resolve, reject) => {
-  request.get(`https://price.phi.network/api/ticker`,{
-    cacheResponse: 60 * 60 * 1000, // cache for 1 hour
-    query: {
-      filter: `WPHI`,
-    },
-  }).then((apiData: any) => {
-    /*
-      Answer 07.12.2003
-      {
-        "quotes": {
-          "USD": {
-            "last_updated": "2023-04-16T05:35:15+00:00",
-            "price": 3098295.179276145
-          }
-        }
-      }
-      
-      @ToDo - При следующей смене формата - коректировка платная
-    */
-    if (apiData
-      && apiData
-      && apiData.quotes
-      && apiData.quotes[fiat]
-    ) {
-      const currencyInfoItem = apiData
-      const priceInFiat = currencyInfoItem.quotes[fiat].price
-      const priceInBtc = priceInFiat / btcPrice
-
-      const currencyInfo = {
-        ...currencyInfoItem.quotes[fiat],
-        price_fiat: priceInFiat,
-        price_btc: priceInBtc,
-      }
-
-      reducers.user.setInfoAboutCurrency({ name: `phi_v1Data`, infoAboutCurrency: currencyInfo })
-      reducers.user.setInfoAboutCurrency({ name: `phiData`, infoAboutCurrency: currencyInfo })
-    }
-    resolve(true)
-  }).catch((error) => {
-    reject(error)
-  })
-})
-
-const getInfoAboutCurrency = (currencyNames) => new Promise(async (resolve, reject) => {
+const getInfoAboutCurrency = (currencyNames) => new Promise((resolve, reject) => {
   reducers.user.setIsFetching({ isFetching: true })
 
   const fiat = config?.opts?.activeFiat || `USD`
@@ -355,6 +301,16 @@ const getInfoAboutCurrency = (currencyNames) => new Promise(async (resolve, reje
       }).join(`,`),
     },
   }).then((answer: any) => {
+    answer.data.push({
+      'name': 'Kaxaa',
+      'symbol': 'kax',
+      'slug': 'kax',
+      'quote': {
+        'USD': {
+          'price': parseFloat(getLocal('kaxa:index')),
+        },
+      },
+    })
     const infoAboutBTC = answer.data.filter(currencyInfo => currencyInfo.symbol.toLowerCase() === 'btc')
 
     const btcPrice = infoAboutBTC?.length && infoAboutBTC[0]?.quote[fiat]?.price
@@ -367,28 +323,18 @@ const getInfoAboutCurrency = (currencyNames) => new Promise(async (resolve, reje
         blockchain,
       } = getCoinInfo(name)
 
-      const currencyName = coin.replaceAll(`*`,``).toLowerCase()
+      const currencyName = coin.replaceAll(`*`, ``).toLowerCase()
 
       const currencyInfoItem = answer.data.filter(currencyInfo => (
         (currencyInfo.symbol.toLowerCase() === currencyName)
         || (currencyName === 'xdai' && currencyInfo.symbol.toLowerCase() === 'dai')
-        || (currencyName === 'phi' && currencyInfo.symbol.toLowerCase() === 'phi_v1')
         || (config?.L2_EVM_KEYS?.includes(currencyName) && currencyInfo.symbol.toLowerCase() === 'eth')
       ))[0]
 
       const customFiatPrice = customTokenExchangeRate(currencyName)
 
       if (currencyInfoItem?.quote[fiat]) {
-        // @To-do, в будущем, если будут просить свои цены, нужно перенести скрипт cursAll в вордпресс и делать правки там
-        let curExchangeRate = 1
-        switch (currencyName) {
-          case 'phi':
-          case 'phi_v1':
-            curExchangeRate = 19486972
-            break
-        }
-        
-        const priceInFiat =  customFiatPrice || currencyInfoItem.quote[fiat].price * curExchangeRate
+        const priceInFiat =  customFiatPrice || currencyInfoItem.quote[fiat].price
         const priceInBtc = btcPrice && priceInFiat / btcPrice
 
         const currencyInfo = {
@@ -440,40 +386,11 @@ const getInfoAboutCurrency = (currencyNames) => new Promise(async (resolve, reje
         }
       }
     })
-    if (currencyNames.includes('phi_v1') || currencyNames.includes('phi')) {
-      getInfoAboutPHI(fiat, btcPrice).then((isOk) => { /* Ok */ }).catch((e) => { console.log('Fail fetch Prices for PHI',e) })
-    }
-    processCustomTokenPrice(btcPrice)
     resolve(true)
   }).catch((error) => {
-    console.log('>>> getInfoAboutCurrency error', error)
     reject(error)
   }).finally(() => reducers.user.setIsFetching({ isFetching: false }))
 })
-
-const processCustomTokenPrice = (btcPrice) => {
-  for (const key in TOKEN_STANDARDS) {
-    const { standard, currency } = TOKEN_STANDARDS[key]
-
-    for (const name in config[standard]) {
-      
-      if (config[standard][name].customFiatPrice) {
-        const priceInFiat = config[standard][name].customFiatPrice
-        const priceInBtc = priceInFiat / btcPrice
-
-        reducers.user.setInfoAboutToken({
-          baseCurrency: currency.toLowerCase(),
-          name: name.toLowerCase(),
-          infoAboutCurrency: {
-            price_fiat: priceInFiat,
-            price_btc: priceInBtc,
-          },
-        })
-      }
-
-    }
-  }
-}
 
 const clearTransactions = () => {
   reducers.history.setTransactions([])
@@ -490,7 +407,11 @@ const mergeTransactions = (mergeTxs: IUniversalObj[]) => {
     .concat(mergeTxs)
     .filter((item) => item)
 
-  actions.history.pullTransactions(allTransactions)
+  const dedupedTransactions = [
+    ...new Map(allTransactions.map((item) => [item.hash, item])).values(),
+  ]
+
+  actions.history.pullTransactions(dedupedTransactions)
 }
 
 const pullActiveCurrency = (currency) => {
@@ -520,16 +441,18 @@ const setTransactions = async () => {
   clearTransactions()
 
   const evmTransactions: any = []
+
   Object.keys(config.enabledEvmNetworks).forEach((evmType) => {
     if (!enabledCurrencies || enabledCurrencies[evmType.toLowerCase()]) {
       if (onlyEvmWallets) {
         if (metamask.isEnabled() && metamask.isConnected()) {
-          evmTransactions.push( actions[evmType.toLowerCase()].getTransaction(metamask.getAddress()) )
+          evmTransactions.push(actions[evmType.toLowerCase()].getTransaction(metamask.getAddress()))
         }
       } else {
-        evmTransactions.push( actions[evmType.toLowerCase()].getTransaction() )
+
+        evmTransactions.push(actions[evmType.toLowerCase()].getTransaction())
         if (metamask.isEnabled() && metamask.isConnected()) {
-          evmTransactions.push( actions[evmType.toLowerCase()].getTransaction(metamask.getAddress()) )
+          evmTransactions.push(actions[evmType.toLowerCase()].getTransaction(metamask.getAddress()))
         }
       }
     }
@@ -552,6 +475,7 @@ const setTransactions = async () => {
 
     fetchTxsPromises.forEach((txPromise: Promise<any[]>) => {
       txPromise.then((txList: any[]) => {
+
         mergeTransactions(txList)
       })
     })
@@ -573,6 +497,9 @@ const setTokensTransaction = async () => {
         const tokenKey = `{${currency.toUpperCase()}}${name}`.toUpperCase()
 
         if (user.isAllowedCurrency(tokenKey)) {
+          if (name.toLowerCase() === 'matic') {
+            standard = 'matic'
+          }
           actions[standard].getTransaction(false, name).then((trx) => {
             if (trx.length) mergeTransactions(trx)
           })
@@ -595,7 +522,6 @@ const getText = () => {
       avaxData,
       movrData,
       oneData,
-      phi_v1Data,
       phiData,
       ameData,
       btcData,
@@ -667,15 +593,9 @@ const getText = () => {
     Private key: ${oneData.privateKey}\r\n
     # PHI CHAIN
     \r\n
-    PHI address: ${phi_v1Data.address}\r\n
-    Private key: ${phi_v1Data.privateKey}\r\n
-    \r\n
-    # PHIv2 CHAIN
-    \r\n
-    PHIv2 address: ${phiData.address}\r\n
+    PHI address: ${phiData.address}\r\n
     Private key: ${phiData.privateKey}\r\n
     \r\n
-    
     # AME CHAIN
     \r\n
     AME address: ${ameData.address}\r\n
@@ -788,83 +708,6 @@ const getAuthData = (name) => {
   return user[`${name}Data`]
 }
 
-const restoreWallet = async (mnemonic) => {
-  const addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase = config?.opts?.addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase
-
-  // Backup critical localStorage
-  const backupMark = actions.btc.getMainPublicKey()
-
-  actions.backupManager.backup(backupMark, false, true)
-  // clean mnemonic, if exists
-  localStorage.setItem(constants.privateKeyNames.twentywords, '-')
-  localStorage.setItem(constants.privateKeyNames.shamirsMnemonics, '-')
-  localStorage.setItem(constants.privateKeyNames.shamirsSecrets, '-')
-
-  const btcWallet = await actions.btc.getWalletByWords(mnemonic)
-  // Check - if exists backup for this mnemonic
-  const restoryMark = btcWallet.publicKey
-
-  if (actions.backupManager.exists(restoryMark)) {
-    actions.backupManager.restory(restoryMark)
-  }
-
-  localStorage.setItem(constants.localStorage.isWalletCreate, 'true')
-
-  Object.keys(config.enabledEvmNetworks).forEach(async (evmNetworkKey) => {
-    const actionKey = evmNetworkKey?.toLowerCase()
-    if (actionKey) await actions[actionKey]?.login(false, mnemonic)
-  })
-
-  await actions.ghost.login(false, mnemonic)
-  await actions.next.login(false, mnemonic)
-
-
-  const btcPrivKey = await actions.btc.login(false, mnemonic)
-  const btcPubKey = actions.btcmultisig.getSmsKeyFromMnemonic(mnemonic)
-  //@ts-ignore: strictNullChecks
-  localStorage.setItem(constants.privateKeyNames.btcSmsMnemonicKeyGenerated, btcPubKey)
-  //@ts-ignore: strictNullChecks
-  localStorage.setItem(constants.privateKeyNames.btcPinMnemonicKey, btcPubKey)
-  
-  if (!addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase) {
-    await sign_btc_2fa(btcPrivKey)
-    await sign_btc_multisig(btcPrivKey)
-  }
-
-  actions.core.markCoinAsVisible('BTC', true)
-
-  const result: any = await actions.btcmultisig.isPinRegistered(mnemonic)
-
-  if (result?.exist) {
-    actions.core.markCoinAsVisible('BTC (PIN-Protected)', true)
-  }
-
-  if (addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase) {
-
-    const currencies = getActivatedCurrencies()
-    currencies.forEach((currency) => {
-      if (
-        currency !== 'BTC (PIN-Protected)'
-      ) {
-        actions.core.markCoinAsVisible(currency.toUpperCase(), true)
-      }
-    })
-
-  } else {
-
-    await getBalances()
-    const allWallets = actions.core.getWallets({ withInternal: true })
-    allWallets.forEach((wallet) => {
-      if (new BigNumber(wallet.balance).isGreaterThan(0)) {
-        actions.core.markCoinAsVisible(
-          wallet.isToken ? wallet.tokenKey.toUpperCase() : wallet.currency,
-          true,
-        )
-      }
-    })
-  }
-}
-
 export default {
   sign,
   sign_btc_2fa,
@@ -882,5 +725,4 @@ export default {
   getWithdrawWallet,
   fetchMultisigStatus,
   pullActiveCurrency,
-  restoreWallet,
 }

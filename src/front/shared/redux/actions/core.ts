@@ -13,7 +13,7 @@ import metamask from 'helpers/metamask'
 import { AddressType } from 'domain/address'
 
 import TOKEN_STANDARDS from 'helpers/constants/TOKEN_STANDARDS'
-
+import {getLocal} from "@walletconnect/utils";
 
 const debug = (...args) => console.log(...args)
 
@@ -37,7 +37,7 @@ const addCurrencyFromOrders = (orders) => {
   const sellOrderArray = orders.map((item) => item.sellCurrency.toLowerCase()) // получаем из ордерова валюты на продажу
   const buyOrderArray = orders.map((item) => item.buyCurrency.toLowerCase()) // получаем из ордерова валюты на покупку
 
-  let sortedArray = [...sellOrderArray] // записываем sellOrderArray в массив
+  const sortedArray = [...sellOrderArray] // записываем sellOrderArray в массив
 
   // terators/generators require regenerator-runtime
   for (const sellCurrency of sellOrderArray) {
@@ -76,7 +76,7 @@ const addCurrencyFromOrders = (orders) => {
     reducers.currencies.updatePartialItems(partialCurrency)
   }
 }
-//@ts-ignore
+// @ts-ignore
 const getSwapById = (id) => new Swap(id, SwapApp.shared())
 
 const getUserData = (currency) => {
@@ -95,13 +95,13 @@ const setFilter = (filter) => {
 }
 
 const acceptRequest = (orderId, participantPeer) => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   const order = SwapApp.shared().services.orders.getByKey(orderId)
   order.acceptRequest(participantPeer)
 }
 
 const declineRequest = (orderId, participantPeer) => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   const order = SwapApp.shared().services.orders.getByKey(orderId)
   order.declineRequest(participantPeer)
 }
@@ -110,7 +110,7 @@ const rememberOrder = (orderId) => {
   reducers.rememberedOrders.savedOrders(orderId)
   localStorage.setItem(
     constants.localStorage.savedOrders,
-    JSON.stringify(getState().rememberedOrders.savedOrders)
+    JSON.stringify(getState().rememberedOrders.savedOrders),
   )
 }
 
@@ -118,7 +118,7 @@ const saveDeletedOrder = (orderId) => {
   reducers.rememberedOrders.deletedOrders(orderId)
   localStorage.setItem(
     constants.localStorage.deletedOrders,
-    JSON.stringify(getState().rememberedOrders.deletedOrders)
+    JSON.stringify(getState().rememberedOrders.deletedOrders),
   )
 }
 
@@ -126,40 +126,40 @@ const forgetOrders = (orderId) => {
   reducers.rememberedOrders.forgetOrders(orderId)
   localStorage.setItem(
     constants.localStorage.savedOrders,
-    JSON.stringify(getState().rememberedOrders.savedOrders)
+    JSON.stringify(getState().rememberedOrders.savedOrders),
   )
 }
 
 const removeOrder = (orderId) => {
   actions.feed.deleteItemToFeed(orderId)
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   SwapApp.shared().services.orders.remove(orderId)
   actions.core.updateCore()
 }
 
 const showMyOrders = () => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   SwapApp.shared().services.orders.showMyOrders()
 }
 
 const hideMyOrders = () => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   SwapApp.shared().services.orders.hideMyOrders()
 }
 
 const deletedPartialCurrency = (orderId) => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   const deletedOrder = SwapApp.shared().services.orders.getByKey(orderId)
   const deletedOrderSellCurrency = deletedOrder.sellCurrency
   const deletedOrderBuyCurrency = deletedOrder.buyCurrency
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   const orders = SwapApp.shared().services.orders.items
 
   const deletedOrderSell = orders.filter(
-    (item) => item.sellCurrency.toUpperCase() === deletedOrderSellCurrency
+    (item) => item.sellCurrency.toUpperCase() === deletedOrderSellCurrency,
   )
   const deletedOrderBuy = orders.filter(
-    (item) => item.buyCurrency.toUpperCase() === deletedOrderBuyCurrency
+    (item) => item.buyCurrency.toUpperCase() === deletedOrderBuyCurrency,
   )
 
   // currencies which must be all time in the drop-down
@@ -178,14 +178,14 @@ const deletedPartialCurrency = (orderId) => {
   }
 }
 
-//@ts-ignore: strictNullChecks
+// @ts-ignore: strictNullChecks
 const hasHiddenOrders = () => SwapApp.shared().services.orders.hasHiddenOrders()
 
 const sendRequest = (orderId, destination = {}, callback) => {
-  //@ts-ignore
+  // @ts-ignore
   const { address: destinationAddress } = destination
 
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   const order = SwapApp.shared().services.orders.getByKey(orderId)
   const { address, reputation, reputationProof } = getUserData(order.buyCurrency)
 
@@ -202,10 +202,10 @@ const sendRequest = (orderId, destination = {}, callback) => {
 }
 
 const sendRequestForPartial = (orderId, newValues, destination = {}, callback) => {
-  //@ts-ignore
+  // @ts-ignore
   const { address: destinationAddress } = destination
 
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   const order = SwapApp.shared().services.orders.getByKey(orderId)
 
   const { address, reputation, reputationProof } = getUserData(order.buyCurrency)
@@ -229,20 +229,20 @@ const sendRequestForPartial = (orderId, newValues, destination = {}, callback) =
       callback(newOrder, isAccepted)
     },
     (oldOrder, newOrder) => {
-      //@ts-ignore: strictNullChecks
+      // @ts-ignore: strictNullChecks
       const oldPrice = Pair.fromOrder(oldOrder).price
-      //@ts-ignore: strictNullChecks
+      // @ts-ignore: strictNullChecks
       const newPrice = Pair.fromOrder(newOrder).price
 
       console.log('prices', oldPrice.toString(), newPrice.toString())
       // | new - old | / old < 5%
       return newPrice.minus(oldPrice).abs().div(oldPrice).isLessThanOrEqualTo(0.05)
-    }
+    },
   )
 }
 
 const createOrder = (data, isPartial = false) => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   const order = SwapApp.shared().services.orders.create(data)
 
   if (!order) return
@@ -271,7 +271,7 @@ const setupPartialOrder = (order) => {
     // if BID, then
     // price == buyAmount / sellAmount
 
-    //@ts-ignore: strictNullChecks
+    // @ts-ignore: strictNullChecks
     const buyAmount = oldPair.isBid() ? sellAmount.div(price) : sellAmount.times(price)
 
     debug('newBuyAmount', buyAmount)
@@ -293,7 +293,7 @@ const setupPartialOrder = (order) => {
     // price = 10 = buyAmount / sellAmount
     // newSellAmount = buyAmount / price
 
-    //@ts-ignore: strictNullChecks
+    // @ts-ignore: strictNullChecks
     const sellAmount = oldPair.isBid() ? buyAmount.times(price) : buyAmount.div(price)
 
     debug('newSellAmount', sellAmount)
@@ -306,7 +306,7 @@ const setupPartialOrder = (order) => {
 }
 
 const initPartialOrders = () => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   SwapApp.shared().services.orders.items.forEach((order) => {
     if (order && order.isMy && order.isPartial) {
       actions.core.setupPartialOrder(order)
@@ -315,13 +315,13 @@ const initPartialOrders = () => {
 }
 
 const requestToPeer = (event, peer, data, callback) => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   SwapApp.shared().services.orders.requestToPeer(event, peer, data, callback)
 }
 
 const updateCore = () => {
   SwapApp.onInit(() => {
-    //@ts-ignore: strictNullChecks
+    // @ts-ignore: strictNullChecks
     const orders = SwapApp.shared().services.orders.items
 
     getOrders(orders)
@@ -331,7 +331,7 @@ const updateCore = () => {
 }
 
 const getSwapHistory = () => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   const swapId = JSON.parse(localStorage.getItem('swapId'))
 
   if (swapId === null || swapId.length === 0) {
@@ -346,9 +346,9 @@ const getSwapHistory = () => {
 const getInformationAboutSwap = (swapId) => {
   if (swapId.length > 0 && typeof swapId === 'string') {
     return {
-      //@ts-ignore: strictNullChecks
+      // @ts-ignore: strictNullChecks
       ...SwapApp.shared().env.storage.getItem(`swap.${swapId}`),
-      //@ts-ignore: strictNullChecks
+      // @ts-ignore: strictNullChecks
       ...SwapApp.shared().env.storage.getItem(`flow.${swapId}`),
     }
   }
@@ -357,12 +357,12 @@ const getInformationAboutSwap = (swapId) => {
 const getHiddenCoins = () => getState().core.hiddenCoinsList || []
 
 const markCoinAsHidden = (coin, doBackup = false) => {
-  let list = getState().core.hiddenCoinsList || []
+  const list = getState().core.hiddenCoinsList || []
   if (!list.includes(coin)) {
     reducers.core.markCoinAsHidden(coin)
     localStorage.setItem(
       constants.localStorage.hiddenCoinsList,
-      JSON.stringify(getState().core.hiddenCoinsList)
+      JSON.stringify(getState().core.hiddenCoinsList),
     )
 
     if (doBackup) {
@@ -380,7 +380,7 @@ const markCoinAsVisible = (coin, doBackup = false) => {
         const [elCoin, elAddress] = el.split(':')
         return elCoin === coin
       }
-    }
+    },
   )
 
   reducers.core.markCoinAsVisible(findedCoin || coin)
@@ -414,10 +414,10 @@ const getWallet = (params: GetWalletParams) => {
   const founded = wallets.filter((wallet) => {
     if (wallet.isMetamask && !wallet.isConnected) return false
     const conditionOk = (
-        blockchain && wallet.blockchain
-          ? blockchain.toLowerCase() === wallet.blockchain.toLowerCase()
-          : true
-      )
+      blockchain && wallet.blockchain
+        ? blockchain.toLowerCase() === wallet.blockchain.toLowerCase()
+        : true
+    )
       && currency
       && wallet.currency.toLowerCase() === currency.toLowerCase()
       && (blockchain ? currencyData?.toLowerCase() === wallet.tokenKey : true)
@@ -428,8 +428,8 @@ const getWallet = (params: GetWalletParams) => {
 
     if (addressType) {
       if (
-        (addressType === AddressType.Internal && !wallet.isMetamask) ||
-        (
+        (addressType === AddressType.Internal && !wallet.isMetamask)
+        || (
           addressType === AddressType.Metamask
           && wallet.isMetamask
           && (
@@ -454,7 +454,7 @@ const getWallet = (params: GetWalletParams) => {
 const getWallets = (options: IUniversalObj = {}) => {
   const { withInternal, withoutExternal } = options
 
-  const onlyEvmWallets = (config?.opts?.ui?.disableInternalWallet) ? true : false
+  const onlyEvmWallets = !!(config?.opts?.ui?.disableInternalWallet)
 
   const {
     user: {
@@ -474,10 +474,7 @@ const getWallets = (options: IUniversalObj = {}) => {
       avaxData,
       movrData,
       oneData,
-      phi_v1Data,
       phiData,
-      fkwData,
-      phpxData,
       ameData,
       tokensData,
       metamaskData,
@@ -497,10 +494,10 @@ const getWallets = (options: IUniversalObj = {}) => {
     if (!(!enabledCurrencies || enabledCurrencies[blockchain.toLowerCase()])) return false
     if (metamaskConnected) {
       return (
-        coin && blockchain !== `` &&
-          (metamaskData?.networkVersion === config.evmNetworks[blockchain].networkVersion) ?
-            tokensData[k] : false
-          )
+        coin && blockchain !== ``
+          && (metamaskData?.networkVersion === config.evmNetworks[blockchain].networkVersion)
+          ? tokensData[k] : false
+      )
     }
     return (coin && blockchain !== ``) ? tokensData[k] : false
   }).filter((d) => d !== false && d.currency !== undefined)
@@ -517,10 +514,7 @@ const getWallets = (options: IUniversalObj = {}) => {
       || enabledCurrencies.avax
       || enabledCurrencies.movr
       || enabledCurrencies.one
-      || enabledCurrencies.phi_v1
       || enabledCurrencies.phi
-      || enabledCurrencies.fkw
-      || enabledCurrencies.phpx
       || enabledCurrencies.ame
         ? metamaskData
           ? [metamaskData]
@@ -623,36 +617,12 @@ const getWallets = (options: IUniversalObj = {}) => {
         : [aurethData]
       : []),
     // =====================================
-    ...(!enabledCurrencies || enabledCurrencies.phi_v1
-      ? metamaskConnected
-        ? withInternal
-          ? [phi_v1Data]
-          : []
-        : [phi_v1Data]
-      : []),
-    // =====================================
     ...(!enabledCurrencies || enabledCurrencies.phi
       ? metamaskConnected
         ? withInternal
           ? [phiData]
           : []
         : [phiData]
-      : []),
-    // =====================================
-    ...(!enabledCurrencies || enabledCurrencies.fkw
-      ? metamaskConnected
-        ? withInternal
-          ? [fkwData]
-          : []
-        : [fkwData]
-      : []),
-    // =====================================
-    ...(!enabledCurrencies || enabledCurrencies.phpx
-      ? metamaskConnected
-        ? withInternal
-          ? [phpxData]
-          : []
-        : [phpxData]
       : []),
     // =====================================
     ...(!enabledCurrencies || enabledCurrencies.ame
@@ -670,7 +640,25 @@ const getWallets = (options: IUniversalObj = {}) => {
     ...data,
   }))
 
-  const data = allData.filter((item) => item?.address && item?.currency && withoutExternal ? !item.isMetamask : true)
+  const kaxaaIndex = getLocal('kaxa:index') ?? 0
+  let data = allData.filter((item) => item?.address && item?.currency && withoutExternal ? !item.isMetamask : true)
+
+  const matic = data.find((item) => (item?.name === 'matic' && item?.standard === 'erc20matic'))
+
+  data = data.filter((item) => !(item?.name === 'matic' && item?.standard === 'erc20matic'))
+
+  for (let i = 0; i < data.length; i++) {
+    if (data[i]?.currency === 'MATIC') {
+      data[i] = { ...data[i], ...matic }
+    }
+
+    if (data[i]?.name === 'kaxaa') {
+      data[i] = { ...data[i], ...{ infoAboutCurrency: {
+        'price': kaxaaIndex,
+        'price_fiat': kaxaaIndex,
+      } } }
+    }
+  }
 
   return (config && config.isWidget) ? sortWallets(data) : data
 }
@@ -722,29 +710,27 @@ const sortWallets = (wallets) => {
 window.getWallets = getWallets
 window.getWallet = getWallet
 
-
 const fetchWalletBalance = async (walletData): Promise<number> => {
   const name = helpers.getCurrencyKey(walletData.currency.toLowerCase(), true)
 
   try {
     if (walletData.isToken) {
-      const standard = walletData.standard
+      const { standard } = walletData
       const balance = await actions[standard].fetchBalance(
         walletData.address,
         walletData.contractAddress,
-        walletData.decimals
+        walletData.decimals,
       )
 
       return new BigNumber(balance).toNumber()
-    } else {
-      if (typeof actions[name]?.fetchBalance) {
-        const balance = await actions[name].fetchBalance(walletData.address)
-
-        return new BigNumber(balance).toNumber()
-      } else {
-        console.warn(`Fail fetch balance for wallet '${name}' - not fetchBalance in actions`)
-      }
     }
+    if (typeof actions[name]?.fetchBalance) {
+      const balance = await actions[name].fetchBalance(walletData.address)
+
+      return new BigNumber(balance).toNumber()
+    }
+    console.warn(`Fail fetch balance for wallet '${name}' - not fetchBalance in actions`)
+
   } catch (error) {
     console.error(`Fail fetch balance for '${name.toUpperCase()}'`, error)
   }
@@ -752,18 +738,17 @@ const fetchWalletBalance = async (walletData): Promise<number> => {
 }
 
 const rememberSwap = (swap) => {
-  //@ts-ignore: strictNullChecks
+  // @ts-ignore: strictNullChecks
   let swapsIds = JSON.parse(localStorage.getItem('swapId'))
 
   if (swapsIds === null || swapsIds.length === 0) {
-      swapsIds = []
+    swapsIds = []
   }
   if (!swapsIds.includes(swap.id)) {
     swapsIds.push(swap.id)
   }
   localStorage.setItem('swapId', JSON.stringify(swapsIds))
 }
-
 
 export default {
   rememberOrder,

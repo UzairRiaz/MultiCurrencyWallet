@@ -47,7 +47,6 @@ declare global {
     chainName: string
     rpcUrls: string[]
     blockExplorerUrls: string[]
-    hasWalletConnect?: boolean
   }
 
 }

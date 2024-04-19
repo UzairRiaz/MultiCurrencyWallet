@@ -18,11 +18,11 @@ const createP2PNode = (options) => {
 
   const defaultListen = [
     //'/ip4/0.0.0.0/tcp/4002',
-    //'/dns4/webrtc-star-1.swaponline.io/tcp/443/wss/p2p-webrtc-star/',
+    // '/dns4/webrtc-star-1.swaponline.io/tcp/443/wss/p2p-webrtc-star/',
     //'/dns4/webrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star/',
     //'/dns4/secure-beyond-12878.herokuapp.com/tcp/443/wss/p2p-webrtc-star/',
-    //'/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/'
-    '/dns4/star.wpmix.net/tcp/443/wss/p2p-webrtc-star/',
+    //'/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
+    '/dns4/star.wpmix.net/tcp/443/wss/p2p-webrtc-star/'
   ]
 
   const defaultDiscoveryPeers = [

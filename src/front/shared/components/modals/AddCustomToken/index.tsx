@@ -31,7 +31,6 @@ EXISTING_STANDARDS.forEach((standard) => {
   const { currency: standardBlockchain } = standardConfig
 
   const isStandardBlockchainEnabled = curEnabled[standardBlockchain]
-
   if (isStandardBlockchainEnabled) {
     TOKEN_STANDARDS_ARR.push(standardConfig)
   }
@@ -66,7 +65,7 @@ type CustomTokenState = {
   baseCurrency: string
   notFound: boolean
   isPending: boolean
-  addTokenMode: 'byAddress' | 'bySearch'
+  addTokenMode: 'bySearch' | 'byAddress'
   searchQuery: string
   assetsList: IUniversalObj[]
   isAssetsListLoading: boolean
@@ -106,7 +105,7 @@ class AddCustomToken extends React.Component<CustomTokenProps, CustomTokenState>
       tokenDecimals: 0,
       notFound: false,
       isPending: false,
-      addTokenMode: 'byAddress',
+      addTokenMode: 'bySearch',
       searchQuery: '',
       assetsList: [],
       isAssetsListLoading: false,
@@ -373,17 +372,17 @@ class AddCustomToken extends React.Component<CustomTokenProps, CustomTokenState>
               <div styleName="tabsWrapper">
                 <button
                   type="button"
-                  styleName={`tab ${addTokenMode === 'byAddress' ? 'active' : ''}`}
-                  onClick={this.selectAddByAddress}
-                >
-                  <FormattedMessage id="addByAddress" defaultMessage="by Address" />
-                </button>
-                <button
-                  type="button"
                   styleName={`tab ${addTokenMode === 'bySearch' ? 'active' : ''}`}
                   onClick={this.selectAddBySearch}
                 >
                   <FormattedMessage id="addBySearch" defaultMessage="by Search" />
+                </button>
+                <button
+                  type="button"
+                  styleName={`tab ${addTokenMode === 'byAddress' ? 'active' : ''}`}
+                  onClick={this.selectAddByAddress}
+                >
+                  <FormattedMessage id="addByAddress" defaultMessage="by Address" />
                 </button>
               </div>
               {addTokenMode === 'byAddress' ? (

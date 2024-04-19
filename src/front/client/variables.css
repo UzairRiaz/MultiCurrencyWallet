@@ -1,8 +1,8 @@
 :root,
 [data-scheme="default"] {
-  --color-brand:#6144e5;
-  --color-brand-hover: #7371ff;
-  --color-brand-background: #6144e51a;
+  --color-brand:#a8c416;
+  --color-brand-hover: #3e5434;
+  --color-brand-background: rgba(168, 196, 22, .1);
   --color-page-background: #f7f7f7;
   --color: #000;
   --color-background: #f7f7f7;

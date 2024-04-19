@@ -1,9 +1,13 @@
 const linksManager = {
+  apiBaseUrl: 'https://kaxaaapi.ddns.net:3000',
   home: '/',
   hashHome: '#/',
 
+  sellKax: '/sell-kax',
   exchange: '/exchange',
+  withdraw: '/withdraw',
   quickSwap: '/exchange/quick',
+  rangoTransactionHistory: '/rango/transactions',
 
   // Market maker page - for run parallel swaps in background
   marketmaker: '/marketmaker',
@@ -12,8 +16,6 @@ const linksManager = {
   history: '/history',
   createWallet: '/createWallet',
   restoreWallet: '/restoreWallet',
-  restoreWalletMnemonic: '/restoreWalletMnemonic',
-  restoreWalletShamirs: '/restoreWalletShamirs',
   connectWallet: '/connectWallet',
   invoices: '/invoices',
   invoice: '/invoice',
@@ -34,6 +36,20 @@ const linksManager = {
   notFound: '/NotFound',
   multisign: '/multisign',
   createInvoice: '/createinvoice',
+
+  // auth /a
+  signin: '/a/signin',
+  signup: '/a/signup',
+  forgotPassword: '/a/forgotPassword',
+  changePassword: '/a/changePassword',
+  otpVerification: '/a/verify',
+  resetPassword: '/a/resetPassword',
+
+  // KAX
+  getKax: '/kax',
+  buyKax: '/buy-kax',
+  profileKaxUser: '/profile',
+  kyc: '/kyc',
 
   // social networks
   medium: '#',
@@ -164,6 +180,5 @@ const linksManager = {
 }
 
 export const getFullOrigin = () => `${location.origin}${location.pathname}#`
-
 
 export default linksManager

@@ -39,7 +39,9 @@ const filterCurrencies = (params) => {
       : true
 
     return isCurrencySuitable && suitableForExternalWallet
-  })
+  }).filter((currency)=>{
+    return currency?.standard === 'erc20matic'
+  });
 
   return {
     currencies: filteredArr,

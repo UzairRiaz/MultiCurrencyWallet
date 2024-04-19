@@ -14,24 +14,40 @@ import { apiLooper, constants, cacheStorageGet, cacheStorageSet, feedback } from
 import externalConfig from 'helpers/externalConfig'
 import metamask from 'helpers/metamask'
 import getCoinInfo from 'common/coins/getCoinInfo'
+import { getLocal, setLocal } from '@walletconnect/utils'
+import kasaHttpClient from 'helpers/kasaHttpClient'
+import { EVM_COIN_ADDRESS } from 'common/helpers/constants/ADDRESSES'
+import config from 'app-config'
+
+const providers = externalConfig.web3
+
+const backendCallInprogress = false
 
 const NETWORK = process.env.MAINNET ? 'mainnet' : 'testnet'
 const Decoder = new InputDataDecoder(TokenAbi)
 
-
 class Erc20LikeAction {
   readonly currency: string
+
   readonly currencyKey: string
+
   readonly standard: string // (ex. erc20, bep20, ...)
+
   readonly explorerApiName: string
+
   readonly explorerLink: string
+
   readonly explorerApiKey: string
+
   readonly adminFeeObj: {
     fee: string // percent of amount
     address: string // where to send
     min: string // min amount
   }
+
   private Web3: IUniversalObj
+
+  private maticProvider: string | null = null
 
   constructor(params) {
     const {
@@ -59,15 +75,22 @@ class Erc20LikeAction {
       ''.concat(
         `Details => standard: ${this.standard}`,
         details ? `, ${details}` : '',
-        ` | Error message - ${error.message} `
-      )
+        ` | Error message - ${error.message} `,
+      ),
     )
     console.group(`Actions >%c ${this.standard}`, 'color: red;')
     console.error('error: ', error)
     console.groupEnd()
   }
 
-  getCurrentWeb3 = () => metamask.getWeb3() || this.Web3
+  getCurrentWeb3 = () =>
+
+    // our custom logic to fetch healthy provider
+    // if (this.standard === 'erc20matic') {
+    //   const maticProvider = this.getMaticProvider()
+    //   this.Web3 = new Web3(maticProvider)
+    // }
+    metamask.getWeb3() || this.Web3
 
   getTokenContract = (contractAddr) => {
     const web3 = this.getCurrentWeb3()
@@ -97,7 +120,7 @@ class Erc20LikeAction {
   getInfoAboutToken = async (contractAddress) => {
     const isContract = await actions[this.currencyKey].isContract(contractAddress)
 
-    try {      
+    try {
       if (isContract) {
         const Web3 = await actions[this.currencyKey].getCurrentWeb3()
         const contract = new Web3.eth.Contract(TokenAbi, contractAddress)
@@ -105,13 +128,13 @@ class Erc20LikeAction {
         const name = await contract.methods.name().call()
         const symbol = await contract.methods.symbol().call()
         const decimals = await contract.methods.decimals().call()
-  
+
         return {
           name,
           symbol,
           decimals: Number(decimals),
         }
-      } 
+      }
     } catch (error) {
       this.reportError(error, 'fail on token info')
     }
@@ -140,13 +163,9 @@ class Erc20LikeAction {
     return customTokens
   }
 
-  getTx = (txRaw) => {
-    return txRaw.transactionHash
-  }
+  getTx = (txRaw) => txRaw.transactionHash
 
-  getTxRouter = (txId, currency) => {
-    return `/token/${currency}/tx/${txId}`
-  }
+  getTxRouter = (txId, currency) => `/token/${currency}/tx/${txId}`
 
   getLinkToInfo = (tx) => {
     if (!tx) return
@@ -161,12 +180,12 @@ class Erc20LikeAction {
       contractAddress,
       decimals,
       name,
-      tokenKey
+      tokenKey,
     } = this.returnTokenInfo(tokenName)
 
-    if(metamask.isConnected() && !metamask.isAvailableNetworkByCurrency(tokenKey)) return
+    if (metamask.isConnected() && !metamask.isAvailableNetworkByCurrency(tokenKey)) return
 
-    const address = (ownAddress) ? ownAddress : metamask.isConnected() ? metamask.getAddress() : ownerAddress
+    const address = (ownAddress) || (metamask.isConnected() ? metamask.getAddress() : ownerAddress)
     const balanceInCache = cacheStorageGet('currencyBalances', `token_${tokenKey}_${address}`)
 
     if (balanceInCache !== false) {
@@ -190,7 +209,6 @@ class Erc20LikeAction {
       return amount
     } catch (error) {
       console.error(error)
-
       reducers.user.setTokenBalanceError({
         baseCurrency: this.currencyKey,
         name,
@@ -198,82 +216,142 @@ class Erc20LikeAction {
     }
   }
 
-  getTransaction = (ownAddress, tokenName): Promise<IUniversalObj[]> => {
-    return new Promise((res) => {
-      const { user: { tokensData } } = getState()
-      // if we have a base currency prefix then delete it
-      tokenName = tokenName.replace(/^\{[a-z1-2_]+\}/, '')
+  getAvailableBalance = async (tokenName, ownAddress = null) => {
+    if (tokenName === undefined) return
 
-      const tokenKey = `{${this.currencyKey}}${tokenName.toLowerCase()}`
-      
-      const { address : sysAddress, contractAddress } = tokensData[tokenKey]
+    const {
+      address: ownerAddress,
+      contractAddress,
+      decimals,
+      name,
+      tokenKey,
+    } = this.returnTokenInfo(tokenName)
 
-      const address = ownAddress || sysAddress
+    if (metamask.isConnected() && !metamask.isAvailableNetworkByCurrency(tokenKey)) return
 
-      if (this.explorerApiName === ``) {
-        res([])
-        return
-      }
+    const address = (ownAddress) || (metamask.isConnected() ? metamask.getAddress() : ownerAddress)
+    const balanceInCache = cacheStorageGet('currencyBalances', `token_${tokenKey}_available_${address}`)
 
-      const url = ''.concat(
-        `?module=account&action=tokentx`,
-        `&contractaddress=${contractAddress}`,
-        `&address=${address}`,
-        `&startblock=0&endblock=99999999`,
-        `&sort=asc`,
-        (this.explorerApiKey !== undefined) ? `&apikey=${this.explorerApiKey}` : ``,
-      )
+    if (balanceInCache !== false) {
+      // reducers.user.setTokenBalance({
+      //   baseCurrency: this.currencyKey,
+      //   name,
+      //   amount: balanceInCache,
+      // })
+      return balanceInCache
+    }
 
-      return apiLooper
-        .get(this.explorerApiName, url, {
-          cacheResponse: 30 * 1000, // 30 seconds
-        })
-        .then((response: IUniversalObj) => {
-          if (Array.isArray(response.result)) {
-            const transactions = response.result
-              .filter((item) => item.value > 0)
-              .map((item) => ({
-                confirmations: item.confirmations,
-                type: tokenName.toLowerCase(),
-                tokenKey,
-                standard: this.standard,
-                baseCurrency: this.currencyKey,
-                hash: item.hash,
-                contractAddress: item.contractAddress,
-                status: item.blockHash !== null ? 1 : 0,
-                value: new BigNumber(String(item.value))
-                  .dividedBy(new BigNumber(10).pow(Number(item.tokenDecimal)))
-                  .toNumber(),
-                address: item.to,
-                date: item.timeStamp * 1000,
-                direction: address.toLowerCase() === item.to.toLowerCase() ? 'in' : 'out',
-              }))
-              .filter((item) => {
-                if (
-                  item.direction === 'in' ||
-                  !this.adminFeeObj ||
-                  address.toLowerCase() === this.adminFeeObj.address.toLowerCase()
-                ) {
-                  return true
-                }
+    try {
+      const amount = await this.fetchAvailableBalance(address, contractAddress, decimals)
+      // reducers.user.setTokenBalance({
+      //   baseCurrency: thTokenAbiTokenAbiis.currencyKey,
+      //   name,
+      //   amount,
+      // })
+      cacheStorageSet('currencyBalances', `token_${tokenKey}_available_${address}`, amount, 30)
 
-                if (item.address.toLowerCase() === this.adminFeeObj.address.toLowerCase()) {
-                  return false
-                }
+      return amount
+    } catch (error) {
+      console.error(error)
 
+      // reducers.user.setTokenBalanceError({
+      //   baseCurrency: this.currencyKey,
+      //   name,
+      // })
+    }
+  }
+
+  getTransaction = (ownAddress, tokenName): Promise<IUniversalObj[]> => new Promise((res) => {
+    const { user: { tokensData } } = getState()
+    // if we have a base currency prefix then delete it
+    tokenName = tokenName.replace(/^\{[a-z]+\}/, '')
+
+    const tokenKey = `{${this.currencyKey}}${tokenName.toLowerCase()}`
+
+    const { address : sysAddress, contractAddress } = tokensData[tokenKey]
+
+    const address = ownAddress || sysAddress
+
+    const url = ''.concat(
+      `?module=account&action=tokentx`,
+      `&contractaddress=${contractAddress}`,
+      `&address=${address}`,
+      `&startblock=0&endblock=99999999`,
+      `&sort=asc&apikey=${this.explorerApiKey}`,
+    )
+
+    // eslint-disable-next-line no-promise-executor-return
+    return this.getTransactionWithRetry({
+      explorerApiName: this.explorerApiName,
+      url,
+      tokenName,
+      tokenKey,
+      standard: this.standard,
+      currencyKey: this.currencyKey,
+      address,
+      adminFeeObj: this.adminFeeObj,
+      res,
+    }, 3)
+  })
+
+  getTransactionWithRetry =  (config, maxAttempt) => {
+    return apiLooper
+      .get(config.explorerApiName, config.url, {
+        cacheResponse: 30 * 1000, // 30 seconds
+      })
+      .then((response: IUniversalObj) => {
+        console.log('getTransactionWithRetry', config, maxAttempt, response)
+
+        if (Array.isArray(response.result)) {
+          const transactions = response.result
+            .filter((item) => item.value > 0)
+            .map((item) => ({
+              confirmations: item.confirmations,
+              type: config.tokenName.toLowerCase(),
+              tokenKey: config.tokenKey,
+              standard: config.standard,
+              baseCurrency: config.currencyKey,
+              hash: item.hash,
+              contractAddress: item.contractAddress,
+              status: item.blockHash !== null ? 1 : 0,
+              value: new BigNumber(String(item.value))
+                .dividedBy(new BigNumber(10).pow(Number(item.tokenDecimal)))
+                .toNumber(),
+              address: item.to,
+              date: item.timeStamp * 1000,
+              direction: config.address.toLowerCase() === item.to.toLowerCase() ? 'in' : 'out',
+            }))
+            .filter((item) => {
+              if (
+                item.direction === 'in'
+                      || !config.adminFeeObj
+                      || config.address.toLowerCase() === config.adminFeeObj.address.toLowerCase()
+              ) {
                 return true
-              })
+              }
 
-            res(transactions)
+              if (item.address.toLowerCase() === config.adminFeeObj.address.toLowerCase()) {
+                return false
+              }
+
+              return true
+            })
+
+          config.res(transactions)
+        } else {
+          if (typeof response.result === 'string' && response.result.toLowerCase().includes('max rate limit') && maxAttempt > 0) {
+            setTimeout(() => {
+              this.getTransactionWithRetry(config, maxAttempt - 1)
+            }, 2000 * (4 - maxAttempt))
           } else {
-            res([])
+            config.res([])
           }
-        })
-        .catch((error) => {
-          this.reportError(error)
-          res([])
-        })
-    })
+        }
+      })
+      .catch((error) => {
+        this.reportError(error)
+        config.res([])
+      })
   }
 
   fetchBalance = async (address, contractAddress, decimals) => {
@@ -286,107 +364,117 @@ class Erc20LikeAction {
       .toNumber()
   }
 
-  fetchTokenTxInfo = async (ticker, hash) => {
-    return new Promise(async (res) => {
-      let txInfo = await this.fetchTxInfo(hash)
+  fetchAvailableBalance = async (address, contractAddress, decimals) => {
+    const Web3 = this.getCurrentWeb3()
 
-      if (txInfo && txInfo.isContractTx) {
-        // This is tx to contract. Fetch all txs and find this tx
-        const transactions: IUniversalObj = await this.getTransaction(txInfo.senderAddress, ticker)
-        const ourTx = transactions.filter((tx) => tx.hash.toLowerCase() === hash.toLowerCase())
+    contractAddress = config.kaxa.kaxaaContractAddress
+    const tokenAbi = [{ 'inputs':[], 'stateMutability':'nonpayable', 'type':'constructor' }, { 'anonymous':false, 'inputs':[{ 'indexed':true, 'internalType':'address', 'name':'owner', 'type':'address' }, { 'indexed':true, 'internalType':'address', 'name':'spender', 'type':'address' }, { 'indexed':false, 'internalType':'uint256', 'name':'value', 'type':'uint256' }], 'name':'Approval', 'type':'event' }, { 'anonymous':false, 'inputs':[{ 'indexed':true, 'internalType':'address', 'name':'previousOwner', 'type':'address' }, { 'indexed':true, 'internalType':'address', 'name':'newOwner', 'type':'address' }], 'name':'OwnershipTransferred', 'type':'event' }, { 'anonymous':false, 'inputs':[{ 'indexed':true, 'internalType':'address', 'name':'from', 'type':'address' }, { 'indexed':true, 'internalType':'address', 'name':'to', 'type':'address' }, { 'indexed':false, 'internalType':'uint256', 'name':'value', 'type':'uint256' }], 'name':'Transfer', 'type':'event' }, { 'inputs':[{ 'internalType':'address', 'name':'owner', 'type':'address' }, { 'internalType':'address', 'name':'spender', 'type':'address' }], 'name':'allowance', 'outputs':[{ 'internalType':'uint256', 'name':'', 'type':'uint256' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'spender', 'type':'address' }, { 'internalType':'uint256', 'name':'amount', 'type':'uint256' }], 'name':'approve', 'outputs':[{ 'internalType':'bool', 'name':'', 'type':'bool' }], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'account', 'type':'address' }], 'name':'balanceOf', 'outputs':[{ 'internalType':'uint256', 'name':'', 'type':'uint256' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[{ 'internalType':'uint256', 'name':'numOfTokens', 'type':'uint256' }], 'name':'burn', 'outputs':[{ 'internalType':'bool', 'name':'', 'type':'bool' }], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[], 'name':'decimals', 'outputs':[{ 'internalType':'uint8', 'name':'', 'type':'uint8' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'spender', 'type':'address' }, { 'internalType':'uint256', 'name':'subtractedValue', 'type':'uint256' }], 'name':'decreaseAllowance', 'outputs':[{ 'internalType':'bool', 'name':'', 'type':'bool' }], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'_address', 'type':'address' }], 'name':'getAvailableBalanceOf', 'outputs':[{ 'internalType':'uint256', 'name':'', 'type':'uint256' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[], 'name':'getLockupPeriod', 'outputs':[{ 'internalType':'uint256', 'name':'', 'type':'uint256' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'spender', 'type':'address' }, { 'internalType':'uint256', 'name':'addedValue', 'type':'uint256' }], 'name':'increaseAllowance', 'outputs':[{ 'internalType':'bool', 'name':'', 'type':'bool' }], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'account', 'type':'address' }, { 'internalType':'uint256', 'name':'numOfTokens', 'type':'uint256' }], 'name':'mint', 'outputs':[{ 'internalType':'bool', 'name':'', 'type':'bool' }], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[], 'name':'name', 'outputs':[{ 'internalType':'string', 'name':'', 'type':'string' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[], 'name':'owner', 'outputs':[{ 'internalType':'address', 'name':'', 'type':'address' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[], 'name':'renounceOwnership', 'outputs':[], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[{ 'internalType':'uint256', 'name':'_lockupPeriod', 'type':'uint256' }], 'name':'setLockupPeriod', 'outputs':[{ 'internalType':'bool', 'name':'', 'type':'bool' }], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[], 'name':'symbol', 'outputs':[{ 'internalType':'string', 'name':'', 'type':'string' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[], 'name':'totalSupply', 'outputs':[{ 'internalType':'uint256', 'name':'', 'type':'uint256' }], 'stateMutability':'view', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'to', 'type':'address' }, { 'internalType':'uint256', 'name':'amount', 'type':'uint256' }], 'name':'transfer', 'outputs':[{ 'internalType':'bool', 'name':'', 'type':'bool' }], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'from', 'type':'address' }, { 'internalType':'address', 'name':'to', 'type':'address' }, { 'internalType':'uint256', 'name':'amount', 'type':'uint256' }], 'name':'transferFrom', 'outputs':[{ 'internalType':'bool', 'name':'', 'type':'bool' }], 'stateMutability':'nonpayable', 'type':'function' }, { 'inputs':[{ 'internalType':'address', 'name':'newOwner', 'type':'address' }], 'name':'transferOwnership', 'outputs':[], 'stateMutability':'nonpayable', 'type':'function' }]
+    const contract = new Web3.eth.Contract(tokenAbi, contractAddress)
 
-        if (ourTx.length) {
-          txInfo.amount = ourTx[0].value
-          txInfo.adminFee = false // Swap doesn't have service fee
+    const result = await contract.methods.getAvailableBalanceOf(address).call()
 
-          if (ourTx[0].direction == `in`) {
-            txInfo = {
-              ...txInfo,
-              receiverAddress: txInfo.senderAddress,
-              senderAddress: txInfo.receiverAddress,
-            }
+    return new BigNumber(String(result))
+      .dividedBy(new BigNumber(String(10)).pow(decimals))
+      .toNumber()
+  }
+
+  fetchTokenTxInfo = async (ticker, hash) => new Promise(async (res) => {
+    let txInfo = await this.fetchTxInfo(hash)
+
+    if (txInfo && txInfo.isContractTx) {
+      // This is tx to contract. Fetch all txs and find this tx
+      const transactions: IUniversalObj = await this.getTransaction(txInfo.senderAddress, ticker)
+      const ourTx = transactions.filter((tx) => tx.hash.toLowerCase() === hash.toLowerCase())
+
+      if (ourTx.length) {
+        txInfo.amount = ourTx[0].value
+        txInfo.adminFee = false // Swap doesn't have service fee
+
+        if (ourTx[0].direction == `in`) {
+          txInfo = {
+            ...txInfo,
+            receiverAddress: txInfo.senderAddress,
+            senderAddress: txInfo.receiverAddress,
           }
         }
       }
+    }
 
-      res(txInfo)
-    })
-  }
+    res(txInfo)
+  })
 
-  fetchTxInfo = async (hash): Promise<IUniversalObj | false> => {
-    return new Promise(async (res) => {
-      const {
-        user: { tokensData },
-      } = getState()
-      const Web3 = this.getCurrentWeb3()
+  fetchTxInfo = async (hash): Promise<IUniversalObj | false> => new Promise(async (res) => {
+    const {
+      user: { tokensData },
+    } = getState()
+    const Web3 = this.getCurrentWeb3()
 
-      Web3.eth.getTransaction(hash)
-        .then((tx) => {
-          if (!tx) return res(false)
+    Web3.eth.getTransaction(hash)
+      .then((tx) => {
+        if (!tx) return res(false)
 
-          const { to, from, gas, gasPrice, blockHash } = tx
-          let amount = 0
-          let receiverAddress = to
-          const contractAddress = to
-          let tokenDecimal = 18
+        const { to, from, gas, gasPrice, blockHash } = tx
+        let amount = 0
+        let receiverAddress = to
+        const contractAddress = to
+        let tokenDecimal = 18
 
-          for (const key in tokensData) {
-            if (
-              tokensData[key]?.decimals &&
-              tokensData[key]?.contractAddress?.toLowerCase() == contractAddress.toLowerCase()
-            ) {
-              tokenDecimal = tokensData[key].decimals
-              break
-            }
+        for (const key in tokensData) {
+          if (
+            tokensData[key]?.decimals
+              && tokensData[key]?.contractAddress?.toLowerCase() == contractAddress.toLowerCase()
+          ) {
+            tokenDecimal = tokensData[key].decimals
+            break
           }
+        }
 
-          const txData = Decoder.decodeData(tx.input)
+        const txData = Decoder.decodeData(tx.input)
 
-          if (txData && txData.inputs?.length === 2 && txData.method === `transfer`) {
-            receiverAddress = `0x${txData.inputs[0]}`
-            amount = new BigNumber(txData.inputs[1])
-              .div(new BigNumber(10).pow(tokenDecimal))
-              .toNumber()
-          }
-
-          const minerFee = new BigNumber(Web3.utils.toBN(gas).toNumber())
-            .multipliedBy(Web3.utils.toBN(gasPrice).toNumber())
-            .dividedBy(1e18)
+        if (txData && txData.inputs?.length === 2 && txData.method === `transfer`) {
+          receiverAddress = `0x${txData.inputs[0]}`
+          amount = new BigNumber(txData.inputs[1])
+            .div(new BigNumber(10).pow(tokenDecimal))
             .toNumber()
+        }
 
-          let adminFee: number | false = false
+        const minerFee = new BigNumber(Web3.utils.toBN(gas).toNumber())
+          .multipliedBy(Web3.utils.toBN(gasPrice).toNumber())
+          .dividedBy(1e18)
+          .toNumber()
 
-          if (this.adminFeeObj) {
-            const feeFromUsersAmount = new BigNumber(this.adminFeeObj.fee)
-              .dividedBy(100)
-              .multipliedBy(amount)
+        let adminFee: number | false = false
 
-            if (new BigNumber(this.adminFeeObj.min).isGreaterThan(feeFromUsersAmount)) {
-              adminFee = new BigNumber(this.adminFeeObj.min).toNumber()
-            } else {
-              adminFee = feeFromUsersAmount.toNumber()
-            }
+        if (this.adminFeeObj) {
+          const feeFromUsersAmount = new BigNumber(this.adminFeeObj.fee)
+            .dividedBy(100)
+            .multipliedBy(amount)
+
+          if (new BigNumber(this.adminFeeObj.min).isGreaterThan(feeFromUsersAmount)) {
+            adminFee = new BigNumber(this.adminFeeObj.min).toNumber()
+          } else {
+            adminFee = feeFromUsersAmount.toNumber()
           }
+        }
 
-          res({
-            amount,
-            afterBalance: null,
-            receiverAddress,
-            senderAddress: from,
-            minerFee,
-            minerFeeCurrency: this.currency,
-            adminFee,
-            confirmed: blockHash !== null,
-            isContractTx:
+        res({
+          amount,
+          afterBalance: null,
+          receiverAddress,
+          senderAddress: from,
+          minerFee,
+          minerFeeCurrency: this.currency,
+          adminFee,
+          confirmed: blockHash !== null,
+          isContractTx:
               contractAddress?.toLowerCase() === externalConfig.swapContract[this.standard]?.toLowerCase(),
-          })
         })
-        .catch((error) => {
-          this.reportError(error)
-          res(false)
-        })
-    })
-  }
+      })
+      .catch((error) => {
+        this.reportError(error)
+        res(false)
+      })
+  })
 
   fetchFees = async (params) => {
     const { gasPrice, gasLimit, speed } = params
@@ -449,7 +537,6 @@ class Erc20LikeAction {
       }
     }
 
-
     reducers.user.setTokenAuthData({
       baseCurrency: this.currencyKey,
       name: data.name,
@@ -484,7 +571,7 @@ class Erc20LikeAction {
       const gasLimitWithPercentForSuccess = new BigNumber(
         new BigNumber(gasLimitCalculated)
           .multipliedBy(1.05) // + 5% -  множитель добавочного газа, если будет фейл транзакции - увеличит (1.05 +5%, 1.1 +10%)
-          .toFixed(0)
+          .toFixed(0),
       ).toString(16)
 
       txArguments.gas = `0x${gasLimitWithPercentForSuccess}`
@@ -544,7 +631,7 @@ class Erc20LikeAction {
 
       try {
         gasLimit = await tokenContract.methods
-          .transfer(this.adminFeeObj.address, '0x' + hexFeeWithDecimals)
+          .transfer(this.adminFeeObj.address, `0x${hexFeeWithDecimals}`)
           .estimateGas(txArguments)
       } catch (error) {
         this.reportError(error, 'Estimate gas in an admin transaction')
@@ -555,14 +642,14 @@ class Erc20LikeAction {
       const gasLimitWithPercentForSuccess = new BigNumber(
         new BigNumber(gasLimit)
           .multipliedBy(1.05) // + 5% -  множитель добавочного газа, если будет фейл транзакции - увеличит (1.05 +5%, 1.1 +10%)
-          .toFixed(0)
+          .toFixed(0),
       ).toString(16)
 
-      txArguments.gas = '0x' + gasLimitWithPercentForSuccess
+      txArguments.gas = `0x${gasLimitWithPercentForSuccess}`
 
       await tokenContract.methods
         // hex amount fixes a BigNumber error
-        .transfer(this.adminFeeObj.address, '0x' + hexFeeWithDecimals)
+        .transfer(this.adminFeeObj.address, `0x${hexFeeWithDecimals}`)
         .send(txArguments)
         .on('transactionHash', (hash) => {
           console.group('%c admin fee', 'color: green;')
@@ -578,14 +665,13 @@ class Erc20LikeAction {
     const { name, to, amount } = params
     const { tokenContract, decimals } = this.returnTokenInfo(name)
     const feeResult = await this.fetchFees({ speed: 'fast' })
-
     const hexWeiAmount = new BigNumber(amount)
       .multipliedBy(10 ** decimals)
       .toString(16)
 
     return new Promise(async (res, rej) => {
       const receipt = await tokenContract.methods
-        .approve(to, '0x' + hexWeiAmount)
+        .approve(to, `0x${hexWeiAmount}`)
         .send(feeResult)
         .on('transactionHash', (hash) => {
           console.group('Actions >%c approve the token', 'color: green')
@@ -596,7 +682,7 @@ class Erc20LikeAction {
         .catch((error) => {
           this.reportError(error)
           rej(error)
-          return
+
         })
 
       res(receipt.transactionHash)
@@ -646,7 +732,6 @@ class Erc20LikeAction {
       const tokenKey = !tokenInfo.blockchain ? `{${this.currencyKey}}${name.toLowerCase()}` : name.toLowerCase()
 
       const { address, contractAddress, decimals, name: tokenName } = tokensData[tokenKey]
-
       const tokenContract = new Web3.eth.Contract(TokenAbi, contractAddress, {
         from: address,
       })
@@ -666,8 +751,53 @@ class Erc20LikeAction {
   }
 }
 
-const providers = externalConfig.web3
+function getMaticProvider(): string|null {
+  let finalMaticProvider: string|null = null
+  let fetchFromBackend = false
 
+  const lastCheck = parseInt(getLocal('kaxa:provider:last_check') || 0, 10)
+  const healthyMaticProvider = getLocal('kaxa:provider:url')
+
+  if (healthyMaticProvider) {
+    finalMaticProvider = healthyMaticProvider
+    if (lastCheck === 0 || (lastCheck > 0 && ((Date.now() - lastCheck) / 3600000) > 3)) {
+      finalMaticProvider = null
+      fetchFromBackend = true
+    }
+
+  } else {
+    finalMaticProvider = providers.matic_provider
+    setLocal('kaxa:provider:last_check', +Date.now())
+    setLocal('kaxa:provider:url', finalMaticProvider)
+  }
+
+  if (fetchFromBackend) {
+    const rpcList = [
+      'https://polygon.llamarpc.com',
+      'https://polygon.blockpi.network/v1/rpc/public',
+      'https://polygon-mainnet.public.blastapi.io',
+      'https://poly-rpc.gateway.pokt.network',
+      'https://rpc-mainnet.matic.quiknode.pro',
+      'https://poly-rpc.gateway.pokt.network',
+      // 'https://rpc-mainnet.matic.quiknode.pro',
+      'https://polygon-bor.publicnode.com',
+    ]
+    const index = Math.floor(Math.random() * rpcList.length)
+    finalMaticProvider = rpcList[index]
+    setLocal('kaxa:provider:last_check', +Date.now())
+    setLocal('kaxa:provider:url', finalMaticProvider)
+
+    // kasaHttpClient.get('healthy-matic-providers').then((response) => {
+    //   backendCallInprogress = false
+    //   setLocal('kaxa:provider:last_check', +new Date())
+    //   setLocal('kaxa:provider:url', response.data.providers[0])
+    // }).catch((error) => {
+    //   console.log(error)
+    //   backendCallInprogress = false
+    // })
+  }
+  return finalMaticProvider
+}
 export default {
   erc20: new Erc20LikeAction({
     currency: 'ETH',
@@ -750,41 +880,14 @@ export default {
     adminFeeObj: externalConfig.opts?.fee?.erc20aurora,
     web3: new Web3(providers.aurora_provider),
   }),
-  phi20_v1: new Erc20LikeAction({
-    currency: 'PHI_V1',
-    standard: 'phi20_v1',
-    explorerApiName: ``, // Нет апи - пуской список транзкций
-    explorerApiKey: externalConfig.api?.phi_v1ApiKey,
-    explorerLink: externalConfig.link.phi_v1Explorer,
-    adminFeeObj: externalConfig.opts?.fee?.phi20_v1,
-    web3: new Web3(providers.phi_v1_provider),
-  }),
   phi20: new Erc20LikeAction({
     currency: 'PHI',
     standard: 'phi20',
-    explorerApiName: 'phiscan', // ???
+    explorerApiName: 'phiscan',
     explorerApiKey: externalConfig.api?.phi_ApiKey,
-    explorerLink: externalConfig.link.phi_Explorer,
+    explorerLink: externalConfig.link.phiExplorer,
     adminFeeObj: externalConfig.opts?.fee?.phi20,
     web3: new Web3(providers.phi_provider),
-  }),
-  fkw20: new Erc20LikeAction({
-    currency: 'FKW',
-    standard: 'fkw20',
-    explorerApiName: 'fkwscan', // ???
-    explorerApiKey: externalConfig.api?.fkw_ApiKey,
-    explorerLink: externalConfig.link.fkw_Explorer,
-    adminFeeObj: externalConfig.opts?.fee?.fkw20,
-    web3: new Web3(providers.fkw_provider),
-  }),
-  phpx20: new Erc20LikeAction({
-    currency: 'PHPX',
-    standard: 'phpx20',
-    explorerApiName: 'phpxscan',
-    explorerApiKey: externalConfig.api?.phpx_ApiKey,
-    explorerLink: externalConfig.link.phpx_Explorer,
-    adminFeeObj: externalConfig.opts?.fee?.phpx20,
-    web3: new Web3(providers.phpx_provider),
   }),
   erc20ame: new Erc20LikeAction({
     currency: 'AME',

@@ -7,7 +7,6 @@ import config from 'helpers/externalConfig'
 import { isMobile } from 'react-device-detect'
 
 import cssModules from 'react-css-modules'
-import styles from './Row.scss'
 import Coin from 'components/Coin/Coin'
 import InlineLoader from 'components/loaders/InlineLoader/InlineLoader'
 import DropdownMenu from 'components/ui/DropdownMenu/DropdownMenu'
@@ -20,6 +19,8 @@ import PartOfAddress from '../PartOfAddress'
 import Tooltip from 'components/ui/Tooltip/Tooltip'
 import { ApiEndpoint } from '../Endpoints'
 import Copy from 'components/ui/Copy/Copy'
+import styles from './Row.scss'
+import {removeLocal, setLocal} from "@walletconnect/utils";
 
 type RowProps = {
   // from component
@@ -81,7 +82,7 @@ const langLabels = defineMessages({
 class Row extends Component<RowProps, RowState> {
   constructor(props) {
     super(props)
-    
+
     const { currency, itemData } = props
     const currencyName = currency.currency
     const isToken = erc20Like.isToken({ name: currencyName })
@@ -106,15 +107,15 @@ class Row extends Component<RowProps, RowState> {
 
   componentDidUpdate(prevProps) {
     const {
-      itemData: { 
+      itemData: {
         balance: prevBalance
       }
     } = prevProps
 
     const {
-      itemData: { 
-        currency, 
-        balance 
+      itemData: {
+        currency,
+        balance
       }
     } = this.props
 
@@ -252,13 +253,22 @@ class Row extends Component<RowProps, RowState> {
 
   handleReceive = () => {
     const {
-      itemData: { currency, address, standard, tokenKey },
+      itemData: { currency, address },
     } = this.props
 
+    let tokenOrCurrency = currency
+    if (['kaxaa', 'usdc'].includes(currency.toLowerCase())) {
+      tokenOrCurrency = `{matic}${currency.toLowerCase()}`
+    }
+
+    if(['usdt'].includes(currency.toLowerCase())) {
+      tokenOrCurrency = `{eth}${currency.toLowerCase()}`
+    }
+
+    console.log('tokenOrCurrency', tokenOrCurrency)
     actions.modals.open(constants.modals.ReceiveModal, {
-      currency: (tokenKey || currency),
+      currency: tokenOrCurrency,
       address,
-      standard,
     })
   }
 
@@ -329,12 +339,13 @@ class Row extends Component<RowProps, RowState> {
     })
   }
 
-  goToExchange = () => {
+  goToExchange = (currency) => {
     const {
       history,
       intl,
     } = this.props
-    history?.push(localisedUrl(intl?.locale, '/exchange'))
+
+    history?.push(localisedUrl(intl?.locale, '/exchange') + `?currency=${currency}`)
   }
 
   goToCurrencyHistory = () => {
@@ -413,11 +424,44 @@ class Row extends Component<RowProps, RowState> {
   }
 
   handleShowMnemonic = () => {
-    actions.modals.open(constants.modals.SaveWalletSelectMethod)
+    actions.modals.open(constants.modals.SaveMnemonicModal)
   }
 
   connectMetamask = () => {
     metamask.handleConnectMetamask()
+  }
+
+  hasLockedBalance =  (): boolean => {
+    if(this.getLockedBalance() > 0) {
+      return true
+    }
+
+    return false
+  }
+
+  getLockedBalance = (): number => {
+    const { itemData } = this.props
+    const { balance, availableKaxaa, currency, isToken } = itemData
+
+    let currencyView = (isToken) ? currency.replaceAll(`*`, ``) : currency
+
+    switch (currencyView) {
+      case 'BTC (Multisig)':
+      case 'BTC (SMS-Protected)':
+      case 'BTC (PIN-Protected)':
+        currencyView = 'BTC'
+        break
+    }
+
+    if (currencyView !== 'KAXAA') {
+      return 0
+    }
+
+    if (!balance || !availableKaxaa) {
+      return 0
+    }
+
+    return balance - availableKaxaa
   }
 
   render() {
@@ -443,6 +487,7 @@ class Row extends Component<RowProps, RowState> {
       balanceError,
       standard,
       isToken,
+      availableKaxaa
     } = itemData
 
     let nodeDownErrorShow = true
@@ -526,7 +571,9 @@ class Row extends Component<RowProps, RowState> {
             defaultMessage="Exchange"
           />
         ),
-        action: this.goToExchange,
+        action: () => {
+          this.goToExchange(currency)
+        },
         disabled: false,
       },
       {
@@ -551,52 +598,52 @@ class Row extends Component<RowProps, RowState> {
         action: this.copy,
         disabled: !mnemonicSaved,
       },
-      !config.opts.hideShowPrivateKey && {
-        id: 1012,
-        title: (
-          <FormattedMessage
-            id="WalletRow_Menu_Сopy_PrivateKey"
-            defaultMessage="Copy Private Key"
-          />
-        ),
-        action: this.copyPrivateKey,
-        disabled: false,
-      },
-      {
-        id: 1011,
-        title: (
-          <FormattedMessage id="WalletRow_Menu_Hide" defaultMessage="Hide" />
-        ),
-        action: this.hideCurrency,
-        disabled: false,
-      },
+      // !config.opts.hideShowPrivateKey && {
+      //   id: 1012,
+      //   title: (
+      //     <FormattedMessage
+      //       id="WalletRow_Menu_Сopy_PrivateKey"
+      //       defaultMessage="Copy Private Key"
+      //     />
+      //   ),
+      //   action: this.copyPrivateKey,
+      //   disabled: false,
+      // },
+      // {
+      //   id: 1011,
+      //   title: (
+      //     <FormattedMessage id="WalletRow_Menu_Hide" defaultMessage="Hide" />
+      //   ),
+      //   action: this.hideCurrency,
+      //   disabled: false,
+      // },
     ].filter((el) => el)
 
     if (
       config.opts.invoiceEnabled
     ) {
-      dropDownMenuItems.push({
-        id: 1004,
-        title: (
-          <FormattedMessage
-            id="WalletRow_Menu_Invoice"
-            defaultMessage="Выставить счет"
-          />
-        ),
-        action: this.handleCreateInvoice,
-        disabled: false,
-      })
-      dropDownMenuItems.push({
-        id: 1005,
-        title: (
-          <FormattedMessage
-            id="WalletRow_Menu_InvoiceLink"
-            defaultMessage="Получить ссылку для выставления счета"
-          />
-        ),
-        action: this.handleCreateInvoiceLink,
-        disabled: false,
-      })
+      // dropDownMenuItems.push({
+      //   id: 1004,
+      //   title: (
+      //     <FormattedMessage
+      //       id="WalletRow_Menu_Invoice"
+      //       defaultMessage="Выставить счет"
+      //     />
+      //   ),
+      //   action: this.handleCreateInvoice,
+      //   disabled: false,
+      // })
+      // dropDownMenuItems.push({
+      //   id: 1005,
+      //   title: (
+      //     <FormattedMessage
+      //       id="WalletRow_Menu_InvoiceLink"
+      //       defaultMessage="Получить ссылку для выставления счета"
+      //     />
+      //   ),
+      //   action: this.handleCreateInvoiceLink,
+      //   disabled: false,
+      // })
     }
 
     if (itemData.isMetamask
@@ -734,10 +781,40 @@ class Row extends Component<RowProps, RowState> {
       showBalance &&
       !balanceError
 
+      const finalRate: any = {};
+      const finalTrends: any = {};
+      const indexPrice = localStorage.getItem('kaxa:index');
+      const marketCoinRate = localStorage.getItem('kaxa:rate')
+      if(indexPrice && marketCoinRate){
+        JSON.parse(marketCoinRate).forEach((item)=>{
+            finalRate[item.coin] = item.rate
+            finalTrends[item.coin] = {
+              trend: item.trend,
+              trendValue: item.trend_value
+            }
+        });
+
+        finalRate['KAXAA'] = indexPrice;
+        finalTrends['KAXAA'] = {
+          trend: 'up',
+          trendValue: "0.00%"
+        }
+
+        // finalRate['KAXAAR'] = indexPrice;
+        // finalTrends['KAXAAR'] = {
+        //   trend: 'up',
+        //   trendValue: "0.00%"
+        // }
+      }
+
+    if (balanceError && nodeDownErrorShow) {
+      setLocal('kaxa:provider:last_check',0)
+    }
+
     return (
       !ethRowWithoutExternalProvider
       && <tr>
-        <td styleName={`assetsTableRow`}>
+        <td styleName={`assetsTableRow`} style={ this.hasLockedBalance() ? { height: '100px' } : {}}>
           <div styleName="assetsTableCurrency">
             <Coin
               className={styles.assetsTableIcon}
@@ -773,7 +850,33 @@ class Row extends Component<RowProps, RowState> {
                     </span>
                   ) : ''}
                 </a>
+
+                {
+                  finalRate[currencyView] && (
+                        <>
+                <span styleName="assetCurrentRate">
+                  ${finalRate[currencyView] ? parseFloat(finalRate[currencyView]).toFixed(2) : 0}
+                </span>
+                          <span style={{color: 'gray'}}>
+
+                &nbsp;
+                            |
+                            &nbsp;
+
+               </span>
+                          <span styleName='assetCurrentRate'>
+                  {finalTrends[currencyView] ? finalTrends[currencyView].trendValue : '0.00%'}
+                </span>
+                          {
+                              finalTrends[currencyView] && finalTrends[currencyView].trend     &&
+                              <img src={'https://ewallet.kaxaa.com/static/wallet/trend'+finalTrends[currencyView].trend+'.svg'} style={{width: '20px', height: '20px', marginLeft: '3px'}}/>
+                          }
+
+                        </>
+                    )
+                }
               </div>
+
             </div>
 
             {/* Tip - if something wrong with endpoint */}
@@ -838,6 +941,24 @@ class Row extends Component<RowProps, RowState> {
                               </div>
                             )
                         ) : (
+                          <>
+                            {
+                            this.hasLockedBalance() &&
+                            <a href='#' title={`Locked KAXAA amount, Total available: ${utils.toMeaningfulFloatValue({
+                              value: balance-this.getLockedBalance(),
+                              meaningfulDecimals: 5,
+                            })}`}>
+                              <span styleName="assetsTableCurrencyBalanceInFiat">
+                              🔒
+                                {utils.toMeaningfulFloatValue({
+                                    value: this.getLockedBalance(),
+                                    meaningfulDecimals: 5,
+                                  })}{' '}
+                                {currencyView}
+                              </span>
+                            </a>
+                            }
+
                           <button
                             id="walletRowUpdateBalanceBtn"
                             styleName="cryptoBalanceBtn"
@@ -850,11 +971,14 @@ class Row extends Component<RowProps, RowState> {
                                 : utils.toMeaningfulFloatValue({
                                     value: balance,
                                     meaningfulDecimals: 5,
-                                  })}{' '}
+                                  })}
+                              {' '}
+
                             </span>
                             <span styleName="assetsTableCurrencyBalance">
                               {currencyView}
                             </span>
+
                             {unconfirmedBalance !== 0 && (
                               <Fragment>
                                 <br />
@@ -870,6 +994,17 @@ class Row extends Component<RowProps, RowState> {
                               </Fragment>
                             )}
                           </button>
+
+                            {finalRate[currencyView] && (
+                                <span styleName="assetsTableCurrencyBalanceInFiat">
+                          {
+                            balanceError ? '?' :
+                                '≈ USD ' + (finalRate[currencyView] ? (balance * finalRate[currencyView]).toFixed(3) : 0)
+                          }
+                          </span>
+                            )}
+
+                          </>
                         )
                   }
                 </Fragment>
@@ -932,7 +1067,10 @@ class Row extends Component<RowProps, RowState> {
             </Fragment>
 
             {/* Fiat amount */}
-            {showFiatBalance || msConfirmCount ? (
+            {/* can show specifically for KAXAA from kaxaa index api */}
+            {/* removed for now as not required */}
+            {/* we have to show conversion from different apis, and also moved code above for a little better stylings*/}
+            {(showFiatBalance || msConfirmCount) && false ? (
               <div styleName="assetsTableValue">
                 {msConfirmCount && !isMobile && (
                   <p styleName="txWaitConfirm" onClick={this.goToCurrencyHistory}>

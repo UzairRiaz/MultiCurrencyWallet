@@ -1,0 +1,99 @@
+.flex-between {display: flex; align-items: center; justify-content: space-between;}
+
+.kaxaa-page---title {
+  text-align: center; margin-bottom: 14px; font-weight: 600; color: var(--color-brand-hover); font-size: 20px;
+}
+
+.w-100 {width: 100%;}
+
+.starter-modal__container-content{
+  height: 100%;
+  padding: 2vh 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 160px);
+
+  
+  .text-brand {color: var(--color-brand);}
+  a.text-brand:hover {color: var(--color-brand-hover);}
+  .text-brand-hover {color: var(--color-brand-hover);}
+
+  .next-page--link {color: var(--color-brand-hover); margin-top: 20px; font-size: 14px;  text-align: center;}
+  .next-page--link .text-brand {margin: 0 5px;}
+}
+
+.custom-from--wrapper {position: relative; padding: 30px; width: 600px; margin-left: auto; margin-right: auto; border-radius: var(--main-component-border-radius); box-shadow: var(--box-shadow); background: var(--color-background-elements);}
+.custom-from--wrapper .form-group {margin: 0 0 16px;}
+.custom-from--wrapper .form-group label {font-weight: 500; margin: 0 0 5px; font-size: 14px;}
+.custom-from--wrapper .form-group input { font-family: 'Roboto Mono'; width: 100%; height: auto; min-height: 60px; font-size: 14px; border: 1px solid var(--color-border); box-shadow: none !important; padding: 12px; border-radius: 0.2rem}
+.custom-from--wrapper .form-group input::placeholder {opacity: .5; letter-spacing: 1;}
+.custom-from--wrapper .form-group input:focus {outline: var(--color-brand) solid 1px;}
+
+.starter-modal__btn-container {
+  max-width: 30em;
+  width: 100%;
+  padding: 0 0.2em;
+  display: flex;
+}
+
+.starter-modal__btn {
+  width: 100%;
+  cursor: pointer;
+  flex: 1;
+  margin: 0.2em;
+  padding: 0.7em 1.4em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.1em solid var(--color-brand);
+  border-radius: 0.2em;
+  white-space: nowrap;
+  letter-spacing: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  background-color: var(--color-brand);
+  color: var(--color-background-elements) !important;
+  transition: 0.15s;
+}
+
+ .required-lable {color: red; font-size: 12px; margin-left: 3px;}
+.validation-error {border: 1px solid red !important;}
+.validation-error:focus {outline: none !important;}
+
+.position-relative {position: relative;}
+.select-login--type { font-family: 'Roboto Mono'; color: var(--color-brand); text-decoration: none;  font-size: 14px; border-radius: 4px; padding: 6px; cursor: pointer; position: absolute; top: 20px; right: 1px; background: #fff;}
+
+.icon-field-left {
+  position: relative;
+  input {padding-left: 60px !important; padding-right: 50px !important}
+  .icon-field {width: 20px; position: absolute; left: 20px; opacity: .8; top: 20px;}
+  .icon-field-right {width: 22px; cursor: pointer; position: absolute; right: 20px; opacity: .8; top: 20px;}
+}
+
+.PhoneInputCountryIcon--border {border: 0 !important; box-shadow: none !important; background: transparent !important;}
+.PhoneInputCountryIcon--border svg {margin-top: -10px;}
+
+.otp-msg {
+  position: relative; padding: 30px; width: 600px; margin-left: auto; margin-right: auto; font-size: 14px; box-shadow: none; border-radius: 0; margin: 0 0 15px; background: rgb(168, 196, 22, .13); padding: 15px 25px; text-align: center;
+}
+
+@media screen and (max-width: 1000px){
+  .starter-modal__container-content{height: auto;}
+  .starter-modal__container-content > div {width: 100%;}
+}
+@media screen and (max-width: 767px) {
+   
+  .otp-msg,
+  .custom-from--wrapper {width: 100%; padding: 15px;} 
+.select-login--type {padding: 6px 6px 6px 6px; top: -32px; right: -5px}
+.kaxaa-page---title {font-size: 16px}
+}
+
+// opt-group
+.opt-group  {
+  display: flex; align-items: center; justify-content: space-between; grid-gap: 20px; gap: 20px;
+  input {flex: 1;}
+}

@@ -194,16 +194,35 @@ export default class DropDown extends Component<DropDownProps, DropDownState> {
                 itemsFiltered.map((item, index) => {
                   if (!item.hidden) {
                     return (
-                      <div
-                        id={item.value}
-                        key={index}
-                        styleName="dropDownItem"
-                        onClick={() => {
-                          linkedInputValue.set('')
-                          this.handleOptionClick(item)
-                        }}
-                      >
-                        {itemRender(item)}
+                      <div className="item--group" style={{
+                        marginBottom: '1px',
+                        paddingBottom: '0px',
+                      }}>
+                        <label
+                          className="item--label"
+                          style={{
+                            display: 'block',
+                            height: '0px',
+                            marginBottom: '0px',
+                          }}>
+&nbsp;
+                        </label>
+                        <div
+                          className="item--value"
+                          id={item.value}
+                          key={index}
+                          styleName="dropDownItem"
+                          style={{
+                            marginBottom: '0px',
+                            paddingBottom: '0px',
+                          }}
+                          onClick={() => {
+                            linkedInputValue.set('')
+                            this.handleOptionClick(item)
+                          }}
+                        >
+                          {itemRender(item)}
+                        </div>
                       </div>
                     )
                   }

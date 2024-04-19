@@ -1,8 +1,8 @@
 import CSSModules from 'react-css-modules'
 import web3Icons from 'images'
-import styles from './Coin.scss'
 import CurrencyIcon, { currencyIcons } from 'components/ui/CurrencyIcon/CurrencyIcon'
 import config from 'app-config'
+import styles from './Coin.scss'
 
 const defaultCurrencyColors = {
   'btc': 'orange',
@@ -17,13 +17,12 @@ const defaultCurrencyColors = {
   'one': 'white',
   'ame': 'white',
   'aureth': '#ECEEF0',
-  'phi_v1': '#1C0237',
   'phi': '#1C0237',
-  'fkw': '#f2f9f6',
-  'phpx': '#000000',
   'usdt': '#33a681',
   'ghost': 'black',
   'next': 'white',
+  'kaxaa': 'green',
+  'kaxaar': 'green',
 }
 
 type CoinProps = {
@@ -55,10 +54,7 @@ const Coin = function (props: CoinProps) {
     || config?.erc20one[lowerName]?.icon
     || config?.erc20ame[lowerName]?.icon
     || config?.erc20aurora[lowerName]?.icon
-    || config?.phi20_v1[lowerName]?.icon
     || config?.phi20[lowerName]?.icon
-    || config?.fkw20[lowerName]?.icon
-    || config?.phpx20[lowerName]?.icon
   ) {
     isIconConfigExist = true
   }
@@ -116,16 +112,8 @@ const Coin = function (props: CoinProps) {
     style.backgroundColor = config.erc20aurora[lowerName].iconBgColor
   }
 
-  if (config?.phi20_v1[lowerName]?.iconBgColor) {
-    style.backgroundColor = config.phi20_v1[lowerName].iconBgColor
-  }
-
-  if (config?.fkw20[lowerName]?.iconBgColor) {
-    style.backgroundColor = config.fkw20[lowerName].iconBgColor
-  }
-  
-  if (config?.phpx20[lowerName]?.iconBgColor) {
-    style.backgroundColor = config.phpx20[lowerName].iconBgColor
+  if (config?.phi20[lowerName]?.iconBgColor) {
+    style.backgroundColor = config.phi20[lowerName].iconBgColor
   }
 
   // *************************************

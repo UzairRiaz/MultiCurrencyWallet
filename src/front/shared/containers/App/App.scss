@@ -6,10 +6,37 @@ body {
 .compressor {
   min-width: 320px;
   background-color: var(--color-page-background);
+  min-height: 100vh;
+
+  > div {min-height: 90vh;}
 }
 
 .headerAndMain {
   position: relative;
+}
+
+.w-100 {width: 100% !important;}
+
+.starter-modal__btn {
+  width: 100%;
+  cursor: pointer;
+  flex: 1;
+  margin: 0.2em;
+  padding: 0.7em 1.4em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.1em solid var(--color-brand);
+  border-radius: 0.2em;
+  white-space: nowrap;
+  letter-spacing: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  background-color: var(--color-brand);
+  color: var(--color-background-elements) !important;
+  transition: 0.15s;
+  width: 100%;
 }
 
 @media all and (max-width: 768px) {

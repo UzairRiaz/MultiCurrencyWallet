@@ -1,5 +1,6 @@
+/* eslint-disable react/no-unknown-property */
 import { Component } from 'react'
-import { withRouter } from 'react-router-dom'
+import { NavLink, withRouter } from 'react-router-dom'
 import { isMobile } from 'react-device-detect'
 import { connect } from 'redaction'
 import actions from 'redux/actions'
@@ -7,6 +8,23 @@ import { injectIntl, FormattedMessage } from 'react-intl'
 
 import cx from 'classnames'
 import CSSModules from 'react-css-modules'
+import Loader from 'components/loaders/Loader/Loader'
+import Button from 'components/controls/Button/Button'
+import UserTooltip from 'components/Header/UserTooltip/UserTooltip'
+import { localisedUrl } from 'helpers/locale'
+import {
+  metamask,
+  constants,
+  links,
+  user,
+  feedback,
+  wpLogoutModal,
+  externalConfig as config,
+} from 'helpers'
+import Swap from 'swap.swap'
+import SwapApp from 'swap.app'
+import { getLocal } from '@walletconnect/utils'
+import { element } from 'prop-types'
 import styles from './Header.scss'
 
 import Nav from './Nav/Nav'
@@ -18,29 +36,17 @@ import TourPartial from './TourPartial/TourPartial'
 import WalletTour from './WalletTour/WalletTour'
 import { WidgetWalletTour } from './WidgetTours'
 
-import Loader from 'components/loaders/Loader/Loader'
-import Button from 'components/controls/Button/Button'
 // Incoming swap requests and tooltips (revert)
-import UserTooltip from 'components/Header/UserTooltip/UserTooltip'
 
+import Pig from './Nav/images/pig.svg'
 
 import { getMenuItems, getMenuItemsMobile } from './config'
-import { localisedUrl } from 'helpers/locale'
-import {
-  metamask,
-  constants,
-  links,
-  user,
-  feedback,
-  wpLogoutModal,
-  externalConfig as config
-} from 'helpers'
 
-import Swap from 'swap.swap'
-import SwapApp from 'swap.app'
+// assets
+import ArrowDown from './images/arrow-down.svg'
 
 /* uncomment to debug */
-//window.isUserRegisteredAndLoggedIn = true
+// window.isUserRegisteredAndLoggedIn = true
 
 const isWidgetBuild = config && config.isWidget
 
@@ -78,7 +84,7 @@ class Header extends Component<any, any> {
     const { isWalletCreate } = constants.localStorage
 
     const dynamicPath = pathname.includes(exchange) ? `${pathname}` : `${home}`
-    //@ts-ignore: strictNullChecks
+    // @ts-ignore: strictNullChecks
     let lsWalletCreated: string | boolean = localStorage.getItem(isWalletCreate)
     if (config && config.isWidget) {
       lsWalletCreated = true
@@ -95,6 +101,7 @@ class Header extends Component<any, any> {
       menuItemsMobile: getMenuItemsMobile(props, lsWalletCreated, dynamicPath),
       createdWalletLoader: isWalletPage && !lsWalletCreated,
       themeSwapAnimation: false,
+      showSubMenu: false,
     }
     this.lastScrollTop = 0
   }
@@ -105,15 +112,17 @@ class Header extends Component<any, any> {
   }
 
   saveMnemonicAndClearStorage = () => {
-    actions.modals.open(constants.modals.SaveWalletSelectMethod, {
+    actions.modals.open(constants.modals.SaveMnemonicModal, {
       onClose: () => {
         this.clearLocalStorage()
-      }
+      },
     })
   }
 
   componentDidMount() {
     this.handlerAsync()
+
+    this.registerClickOutsideEvent()
 
     // Temporarily
     // show a request for users to clear their local storage
@@ -143,7 +152,10 @@ class Header extends Component<any, any> {
             id="CleanLocalStorage"
             defaultMessage="Oops, looks like the app needs to clean your local storage. Please save your 12 words seed phrase (if you have not saved it before), then clear local storage by clicking on the button and import 12 words seed again. Sorry for the inconvenience. {indent} {button}"
             values={{
-              indent: <><br /><br /></>,
+              indent: <>
+                <br />
+                <br />
+              </>,
               button: modalButton,
             }}
           />
@@ -170,58 +182,58 @@ class Header extends Component<any, any> {
     })
   }
 
-  tapCreateWalletButton = (customProps = {}) =>
-    new Promise((resolve) => {
-      const finishProps = { ...this.props, ...customProps }
-      //@ts-ignore
-      const { location, intl } = finishProps
-      const { pathname } = location
-      const { wallet, home } = links
+  tapCreateWalletButton = (customProps = {}) => new Promise((resolve) => {
+    const finishProps = { ...this.props, ...customProps }
+    // @ts-ignore
+    const { location, intl } = finishProps
+    const { pathname } = location
+    const { wallet, home } = links
 
-      let isWalletCreate = localStorage.getItem(constants.localStorage.isWalletCreate)
+    let isWalletCreate = localStorage.getItem(constants.localStorage.isWalletCreate)
 
-      if (config && config.isWidget) {
-        //@ts-ignore
-        isWalletCreate = true
-      }
+    if (config && config.isWidget) {
+      // @ts-ignore
+      isWalletCreate = true
+    }
 
-      const isWalletPage = pathname === wallet || pathname === `/ru${wallet}`
+    const isWalletPage = pathname === wallet || pathname === `/ru${wallet}`
 
-      if (isWalletPage && !isWalletCreate) {
-        //@ts-ignore
-        isWalletCreate = true
+    if (isWalletPage && !isWalletCreate) {
+      // @ts-ignore
+      isWalletCreate = true
 
-        this.setState(
-          () => ({
-            menuItems: getMenuItems(this.props),
-            //@ts-ignore
-            menuItemsMobile: getMenuItemsMobile(this.props, isWalletCreate),
-            createdWalletLoader: true,
-          }),
-          () => {
-            setTimeout(() => {
-              this.setState(() => ({
-                createdWalletLoader: false,
-              }))
-              resolve(true)
-            }, 4000)
-          }
-        )
-      } else {
-        resolve(true)
-      }
-    })
+      this.setState(
+        () => ({
+          menuItems: getMenuItems(this.props),
+          // @ts-ignore
+          menuItemsMobile: getMenuItemsMobile(this.props, isWalletCreate),
+          createdWalletLoader: true,
+        }),
+        () => {
+          setTimeout(() => {
+            this.setState(() => ({
+              createdWalletLoader: false,
+            }))
+            resolve(true)
+          }, 4000)
+        },
+      )
+    } else {
+      resolve(true)
+    }
+  })
 
   startTourAndSignInModal = (customProps = {}) => {
     const finishProps = { ...this.props, ...customProps }
     const { wasOnExchange, wasOnWallet, isWalletCreate, wasOnWidgetWallet } = constants.localStorage
     const {
-      //@ts-ignore
+      // @ts-ignore
       hiddenCoinsList,
-      //@ts-ignore
+      // @ts-ignore
       location: { hash, pathname },
     } = finishProps
-    const { wallet, exchange, marketmaker, marketmaker_short } = links
+    const { wallet, exchange } = links
+    // const { wallet, exchange, marketmaker, marketmaker_short } = links
     const isGuestLink = !(!hash || hash.slice(1) !== 'guest')
 
     if (isGuestLink) {
@@ -233,7 +245,7 @@ class Header extends Component<any, any> {
 
     this.setState(() => ({
       menuItems: getMenuItems(this.props),
-      //@ts-ignore
+      // @ts-ignore
       menuItemsMobile: getMenuItemsMobile(this.props, true),
     }))
 
@@ -241,7 +253,7 @@ class Header extends Component<any, any> {
     const isWalletPage = path.includes(wallet) || path === `/`
     const isPartialPage = path.includes(exchange)
 
-    const isMarketPage = path.includes(marketmaker) || path.includes(marketmaker_short)
+    // const isMarketPage = path.includes(marketmaker) || path.includes(marketmaker_short)
     const didOpenWalletCreate = localStorage.getItem(isWalletCreate)
 
     const wasOnWalletLs = localStorage.getItem(wasOnWallet)
@@ -256,9 +268,9 @@ class Header extends Component<any, any> {
     let userCurrencies = allData.filter(({ currency: baseCurrency, isToken, tokenKey, address, balance }) => {
       const currency = ((isToken) ? tokenKey : baseCurrency).toUpperCase()
       return (
-        (!hiddenCoinsList.includes(currency) &&
-          !hiddenCoinsList.includes(`${currency}:${address}`)) ||
-        balance > 0
+        (!hiddenCoinsList.includes(currency)
+          && !hiddenCoinsList.includes(`${currency}:${address}`))
+        || balance > 0
       )
     })
 
@@ -267,7 +279,7 @@ class Header extends Component<any, any> {
         ({ currency: baseCurrency, isToken, tokenKey, address }) => {
           const currency = ((isToken) ? tokenKey : baseCurrency).toUpperCase()
           return !hiddenCoinsList.includes(currency) && !hiddenCoinsList.includes(`${currency}:${address}`)
-        }
+        },
       )
       userCurrencies = userCurrencies.filter(({ currency: baseCurrency, isToken, tokenKey }) => {
         const currency = ((isToken) ? tokenKey : baseCurrency).toUpperCase()
@@ -276,7 +288,6 @@ class Header extends Component<any, any> {
     }
 
     userCurrencies = user.filterUserCurrencyData(userCurrencies)
-
     switch (true) {
       case isWalletPage && !wasOnWalletLs:
         tourEvent = this.openWalletTour
@@ -288,7 +299,7 @@ class Header extends Component<any, any> {
         tourEvent = this.openWidgetWalletTour
         break
       case !metamask.isConnected() && !userCurrencies.length && isWalletPage && !config.opts.plugins.backupPlugin && !config.opts.ui.disableInternalWallet:
-        this.openCreateWallet({ onClose: tourEvent })
+        // this.openCreateWallet({ onClose: tourEvent })
         break
       default:
         return
@@ -355,18 +366,18 @@ class Header extends Component<any, any> {
     this.setState(() => ({ themeSwapAnimation: true }))
 
     const wasDark = localStorage.getItem(constants.localStorage.isDark)
-    const dataset = document.body.dataset
+    const { dataset } = document.body
 
     feedback.theme.switched(wasDark ? 'light' : 'dark')
 
     if (wasDark) {
       localStorage.removeItem(constants.localStorage.isDark)
       localStorage.setItem(constants.localStorage.isLight, 'true')
-      dataset.scheme = "default"
+      dataset.scheme = 'default'
     } else {
       localStorage.removeItem(constants.localStorage.isLight)
       localStorage.setItem(constants.localStorage.isDark, 'true')
-      dataset.scheme = "dark"
+      dataset.scheme = 'dark'
     }
 
     this.setState(() => ({ themeSwapAnimation: false }))
@@ -394,7 +405,6 @@ class Header extends Component<any, any> {
       toggle()
     }
 
-
     if ((pathname.substr(0, links.marketmaker.length) === links.marketmaker)
       || (pathname.substr(0, links.marketmaker_short) === links.marketmaker_short)
     ) {
@@ -407,9 +417,52 @@ class Header extends Component<any, any> {
     }
   }
 
+  toggleSubMenu = () => {
+    this.state.showSubMenu
+      ? this.setState(() => ({ showSubMenu: false }))
+      : this.setState(() => ({ showSubMenu: true }))
+
+  }
+
+  registerClickOutsideEvent = () => {
+    const thisContext = this
+    document.onclick = function (event: MouseEvent) {
+      const elementId = (event.target as Element).id
+      const exceptions = ['logout-wrapper-div', 'logout-submenu-arrow', 'logout-submenu-arrow-wrapper']
+      if (!exceptions.includes(elementId) && thisContext.state.showSubMenu) {
+        thisContext.setState(() => ({ showSubMenu: false }))
+      }
+    }
+  }
+
   handleLogout = () => {
     const { intl } = this.props
     wpLogoutModal(this.handleLogout, intl)
+  }
+
+  handleKasaLogout = () => {
+    const modalCloseIcons = document.querySelectorAll('[role="closeButton"]')
+    for (let i = 0; i < modalCloseIcons.length; i++) {
+      if (modalCloseIcons[i]) {
+        (modalCloseIcons[i] as HTMLElement).click()
+      }
+    }
+    window.localStorage.clear()
+    this.clearCookies()
+    // window.location.href = 'https://staging.kaxaa.com'
+  }
+
+  clearCookies = () => {
+    const cookies = document.cookie.split(';')
+    const domain = `.${window.location.hostname.split('.').reverse()[1]}.${
+      window.location.hostname.split('.').reverse()[0]}`
+
+    for (let i = 0; i < cookies.length; i++) {
+      const  cookie = cookies[i]
+      const eqPos = cookie.indexOf('=')
+      const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;domain=${domain};path=/`
+    }
   }
 
   render() {
@@ -420,6 +473,7 @@ class Header extends Component<any, any> {
       menuItemsMobile,
       createdWalletLoader,
       isWidgetTourOpen,
+      visitorName,
     } = this.state
     const {
       intl: { formatMessage },
@@ -433,8 +487,7 @@ class Header extends Component<any, any> {
 
     const { exchange, wallet } = links
 
-    const isWalletPage =
-      pathname.includes(wallet) || pathname === `/ru${wallet}` || pathname === `/`
+    const isWalletPage =      pathname.includes(wallet) || pathname === `/ru${wallet}` || pathname === `/`
 
     const isExchange = pathname.includes(exchange)
 
@@ -444,23 +497,69 @@ class Header extends Component<any, any> {
       <div styleName="flexebleHeader">
         <div styleName="leftArea">
           <Logo />
+          {localStorage.getItem('kasa:token')
+              && (
+                <a href="#">
+                  <img src={Pig} style={{ width: '40px', marginLeft: '15px' }} />
+                </a>
+              )}
           {!isMobile && <Nav menu={menuItems} />}
         </div>
         <div styleName="rightArea">
-          {!config.isExtension && Object.values(config.enabledEvmNetworks).length ? (
-            <WalletConnect />
-          ) : null}
+          {/* {localStorage.getItem('kasa:token') && !config.isExtension && Object.values(config.enabledEvmNetworks).length ? ( */}
+          {/*   <WalletConnect /> */}
+          {/* ) : null} */}
 
           {window.WPSO_selected_theme !== 'only_light' && window.WPSO_selected_theme !== 'only_dark' && (
             <ThemeSwitcher onClick={this.handleToggleTheme} />
           )}
 
-          {isLogoutPossible && ( // some wordpress plugin cases
+          {/* {isLogoutPossible && ( // some wordpress plugin cases
             <div styleName="logoutWrapper" onClick={this.handleLogout}>
               <i className="fas fa-sign-out-alt" />
               <FormattedMessage id="ExitWidget" defaultMessage="Exit" />
             </div>
-          )}
+          )} */}
+          {
+            localStorage.getItem('kasa:token')
+                && (
+                  <div id="logout-wrapper-div" styleName="logoutWrapper" onClick={this.toggleSubMenu}>
+                    <FormattedMessage id="hi" defaultMessage="Hi, " />
+                    {localStorage.getItem('kasa:user') ?? 'Guest'}
+                    <span id="logout-submenu-arrow-wrapper" styleName={`icon-field-left ${this.state.showSubMenu ? '_rotate-90' : ''}`}>
+                      <img id="logout-submenu-arrow" styleName="icon-field" src={ArrowDown} alt="^" />
+                    </span>
+                  </div>
+                )
+          }
+
+          {this.state.showSubMenu
+              && (
+                <div id="logout-submenu" styleName="user-sub-header">
+                  <span styleName="user-sub-header-ul">
+                    <ul>
+                      <li>
+                        <NavLink
+                          exact
+                          to={`${links.resetPassword}`}
+                        >
+                          Reset Password
+                        </NavLink>
+                      </li>
+                      <li>
+                        <NavLink
+                          onClick={this.handleKasaLogout}
+                          exact
+                          to={`${links.signin}`}
+                        >
+                          Logout
+                        </NavLink>
+                      </li>
+                    </ul>
+                  </span>
+                </div>
+              )}
+
         </div>
       </div>
     )
@@ -494,12 +593,6 @@ class Header extends Component<any, any> {
           )}
           {incomingSwapRequest}
           <NavMobile menu={menuItemsMobile} isHidden={isInputActive} />
-
-          {isTourOpen && isWalletPage && (
-            <div styleName="walletTour">
-              <WalletTour isTourOpen={isTourOpen} closeTour={this.closeTour} />
-            </div>
-          )}
           {isWidgetTourOpen && isWalletPage && (
             <div styleName="walletTour">
               <WidgetWalletTour isTourOpen={isWidgetTourOpen} closeTour={this.closeWidgetTour} />
@@ -512,8 +605,8 @@ class Header extends Component<any, any> {
     return (
       <header
         className={cx({
-          [styles['header']]: true,
-          [styles['widgetHeader']]: isWidgetBuild,
+          [styles.header]: true,
+          [styles.widgetHeader]: isWidgetBuild,
           [styles['header-promo']]: isWalletPage,
         })}
       >

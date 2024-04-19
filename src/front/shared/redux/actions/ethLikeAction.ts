@@ -258,11 +258,6 @@ class EthLikeAction {
         resolve([])
       }
 
-      if (this.explorerApiName === ``) {
-        resolve([])
-        return
-      }
-
       const internalUrl = `?module=account&action=txlistinternal&address=${address}&startblock=0&endblock=99999999&sort=asc&apikey=${this.explorerApiKey}`
       const url = `?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=asc&apikey=${this.explorerApiKey}`
 
@@ -281,26 +276,16 @@ class EthLikeAction {
               }
             })
 
-            apiLooper
-              .get(this.explorerApiName, url)
-              .then((response: any) => {
-                if (Array.isArray(response.result)) {
-                  const transactions = this.formatTransactions({
-                    address,
-                    txs: response.result,
-                    internalTxs: internals,
-                    currencyName: ownType || this.tickerKey,
-                  })
+            this.getTransactionWithRetry({
+              address,
+              tickerKey: this.tickerKey,
+              explorerApiName: this.explorerApiName,
+              url,
+              internals,
+              ownType,
+              resolve,
+            }, 3)
 
-                  resolve(transactions)
-                } else {
-                  resolve([])
-                }
-              })
-              .catch((error) => {
-                this.reportError(error, 'part: getTransaction')
-                resolve([])
-              })
           } else {
             resolve([])
           }
@@ -309,6 +294,37 @@ class EthLikeAction {
           resolve([])
         })
     })
+  }
+
+  getTransactionWithRetry = (config, maxAttempt) => {
+    console.log('getTransactionWithRetry', config, maxAttempt)
+    apiLooper
+      .get(config.explorerApiName, config.url)
+      .then((response: any) => {
+        if (Array.isArray(response.result)) {
+          const transactions = this.formatTransactions({
+            address: config.address,
+            txs: response.result,
+            internalTxs: config.internals,
+            currencyName: config.ownType || config.tickerKey,
+          })
+
+          config.resolve(transactions)
+        } else {
+          if (typeof response.result === 'string' && response.result.toLowerCase().includes('max rate limit') && maxAttempt > 0) {
+            setTimeout(() => {
+              this.getTransactionWithRetry(config, maxAttempt - 1)
+            }, 1000)
+          } else {
+            config.resolve([])
+          }
+
+        }
+      })
+      .catch((error) => {
+        this.reportError(error, 'part: getTransaction')
+        config.resolve([])
+      })
   }
 
   formatTransactions = (params) => {
@@ -321,7 +337,8 @@ class EthLikeAction {
       .filter(
         (item) => item.value > 0 || (internalTxs[item.hash] && internalTxs[item.hash].value > 0),
       ).map((item) => ({
-        type: currencyName,
+        type: currencyName.toLowerCase() === '{matic}matic' ? 'matic' : currencyName,
+        tokenKey: currencyName.toLowerCase() === 'matic' ? '{matic}matic' : currencyName,
         confirmations: item.confirmations,
         hash: item.hash,
         status: item.blockHash ? 1 : 0,
@@ -411,6 +428,7 @@ class EthLikeAction {
       from: Web3.utils.toChecksumAddress(ownerAddress),
       to: to.trim(),
       gasPrice,
+      gas: '0x00',
       value: Web3.utils.toHex(Web3.utils.toWei(String(amount), 'ether')),
     }
 
@@ -553,6 +571,7 @@ class EthLikeAction {
           console.group('%c tx hash', 'color: green;')
           console.log(hash)
           console.groupEnd()
+
           if (!toAdmin && !waitReceipt) {
             reducers.transactions.addTransactionToQueue({
               networkCoin: this.ticker,
@@ -584,17 +603,12 @@ class EthLikeAction {
 
     const Web3 = this.getCurrentWeb3()
 
-    try {
-      const codeAtAddress = await Web3.eth.getCode(address)
+    const codeAtAddress = await Web3.eth.getCode(address)
+    const codeIsEmpty = !codeAtAddress || codeAtAddress === '0x' || codeAtAddress === '0x0'
 
-      const codeIsEmpty = !codeAtAddress || codeAtAddress === '0x' || codeAtAddress === '0x0'
+    contractsList[lowerAddress] = !codeIsEmpty
 
-      contractsList[lowerAddress] = !codeIsEmpty
-
-      return !codeIsEmpty
-    } catch (err) {
-      return false
-    }
+    return !codeIsEmpty
   }
 }
 
@@ -702,45 +716,15 @@ export default {
     adminFeeObj: externalConfig.opts?.fee?.aureth,
     web3: new Web3(providers.aurora_provider),
   }),
-  PHI_V1: new EthLikeAction({
-    coinName: 'PHI_V1',
-    ticker: 'PHI_V1',
-    chainId: externalConfig.evmNetworks.PHI_V1.chainId,
-    explorerApiName: ``, // нет апи - пустой список транзакций
-    explorerApiKey: externalConfig.api?.phi_ApiKey,
-    explorerLink: externalConfig.link.phi_v1Explorer,
-    adminFeeObj: externalConfig.opts?.fee?.phi_v1,
-    web3: new Web3(providers.phi_v1_provider),
-  }),
   PHI: new EthLikeAction({
     coinName: 'PHI',
     ticker: 'PHI',
     chainId: externalConfig.evmNetworks.PHI.chainId,
-    explorerApiName: 'phiscan', // ???
-    explorerApiKey: 'not_needed_apikey',
-    explorerLink: externalConfig.link.phi_Explorer,
+    explorerApiName: 'phiscan',
+    explorerApiKey: externalConfig.api?.phi_ApiKey,
+    explorerLink: externalConfig.link.phiExplorer,
     adminFeeObj: externalConfig.opts?.fee?.phi,
     web3: new Web3(providers.phi_provider),
-  }),
-  FKW: new EthLikeAction({
-    coinName: 'FKW',
-    ticker: 'FKW',
-    chainId: externalConfig.evmNetworks.FKW.chainId,
-    explorerApiName: 'fkwscan', // ???
-    explorerApiKey: 'api-no-key',
-    explorerLink: externalConfig.link.fkw_Explorer,
-    adminFeeObj: externalConfig.opts?.fee?.fkw,
-    web3: new Web3(providers.fkw_provider),
-  }),
-  PHPX: new EthLikeAction({
-    coinName: 'PHPX',
-    ticker: 'PHPX',
-    chainId: externalConfig.evmNetworks.PHPX.chainId,
-    explorerApiName: 'phpxscan',
-    explorerApiKey: 'api-no-key',
-    explorerLink: externalConfig.link.phpx_Explorer,
-    adminFeeObj: externalConfig.opts?.fee?.phpx,
-    web3: new Web3(providers.phpx_provider),
   }),
   AME: new EthLikeAction({
     coinName: 'AME',

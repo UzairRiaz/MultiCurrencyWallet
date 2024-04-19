@@ -9,6 +9,7 @@
   background: var(--color-background-elements);
   border-radius: var(--main-component-border-radius);
   @include ff-regular;
+  font-size: 15px;
 }
 
 .panelHeader {

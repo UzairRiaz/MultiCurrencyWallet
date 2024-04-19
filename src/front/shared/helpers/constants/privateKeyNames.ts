@@ -10,10 +10,7 @@ export default {
   movr: `${process.env.ENTRY}:movr:privateKey`,
   one: `${process.env.ENTRY}:one:privateKey`,
   ame: `${process.env.ENTRY}:ame:privateKey`,
-  phi_v1: `${process.env.ENTRY}:phi:privateKey`,
-  phi: `${process.env.ENTRY}:phi:privateKey`, // Use old blockchain private key
-  fkw: `${process.env.ENTRY}:fkw:privateKey`,
-  phpx: `${process.env.ENTRY}:phpx:privateKey`,
+  phi: `${process.env.ENTRY}:phi:privateKey`,
   btc: `${process.env.ENTRY}:btc:privateKey`,
   ghost: `${process.env.ENTRY}:ghost:privateKey`,
   next: `${process.env.ENTRY}:next:privateKey`,
@@ -24,7 +21,4 @@ export default {
   btcSmsMnemonicKeyGenerated: `${process.env.ENTRY}:btcSmsMnemonicKeyGenerated`,
 
   btcPinMnemonicKey: `${process.env.ENTRY}:btcPinMnemonicKey`,
-  // Shamir's Secret-Sharing for Mnemonic Codes
-  shamirsMnemonics: `${process.env.ENTRY}:shamirsMnemonics`,
-  shamirsSecrets: `${process.env.ENTRY}:shamirsSecrets`,
 }

@@ -51,7 +51,7 @@ class TxInfo extends Component<any, any> {
     }
 
     // delete tokens base currency prefix
-    const currency = sourceCurrency.replace(/^\{[a-z1-2_]+\}/, '')
+    const currency = sourceCurrency.replace(/^\{[a-z]+\}/, '')
 
     this.state = {
       currency,
@@ -82,8 +82,12 @@ class TxInfo extends Component<any, any> {
       currency,
     } = this.state
 
+
+    console.log("_ERROR_",error)
+
     if (isFetching) return <Skeleton count={2} />
-    if (error)      return <FormattedMessage id="InfoPay_2_Error" defaultMessage="Error loading data" />
+
+    //if (error)      return <FormattedMessage id="InfoPay_2_Error" defaultMessage="Error loading data" />
 
     // eslint-disable-next-line prefer-destructuring
     if (Array.isArray(toAddress)) toAddress = toAddress[0]

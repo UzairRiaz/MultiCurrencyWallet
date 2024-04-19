@@ -41,7 +41,7 @@ class SwapApp extends EventEmitter {
   services: SwapAppServices = {}
   swaps: Array<SwapInterface>
   flows: Array<Flow>
-  
+
 
   static _swapAppInstance = null
 

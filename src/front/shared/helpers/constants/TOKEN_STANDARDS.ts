@@ -12,6 +12,26 @@ export type TokenStandard = {
 }
 
 const STANDARDS = {
+  kax: {
+    platform: 'polygon chain',
+    platformKey: 'matic',
+    standard: 'erc20matic',
+    value: 'erc20matic',
+    currency: 'matic',
+    explorerApi: config.api.maticscan,
+    explorerApiKey: config.api.polygon_ApiKey,
+    hasSupportAtomicSwap: true,
+  },
+  usdc: {
+    platform: 'ethereum',
+    platformKey: 'ethereum',
+    standard: 'erc20',
+    value: 'erc20',
+    currency: 'eth',
+    explorerApi: config.api.maticscan,
+    explorerApiKey: config.api.polygon_ApiKey,
+    hasSupportAtomicSwap: true,
+  },
   erc20: {
     platform: 'ethereum',
     platformKey: 'ethereum',
@@ -112,44 +132,14 @@ const STANDARDS = {
     explorerApiKey: config.api.aurora_ApiKey,
     hasSupportAtomicSwap: false,
   },
-  phi20_v1: {
-    platform: '',
-    platformKey: '',
-    standard: 'phi20_v1',
-    value: 'phi20_v1',
-    currency: 'phi_v1',
-    explorerApi: config.api?.aurorascan || '', // ???
-    explorerApiKey: config.api?.phi_ApiKey || '', // ???
-    hasSupportAtomicSwap: false,
-  },
   phi20: {
     platform: '',
     platformKey: '',
     standard: 'phi20',
     value: 'phi20',
     currency: 'phi',
-    explorerApi: config.api?.aurorascan || '', // ???
-    explorerApiKey: config.api?.phi_ApiKey || '', // ???
-    hasSupportAtomicSwap: false,
-  },
-  fkw20: {
-    platform: '',
-    platformKey: '',
-    standard: 'fkw20',
-    value: 'fkw20',
-    currency: 'fkw',
-    explorerApi: config.api?.fkwscan || '', // ???
-    explorerApiKey: config.api?.fkwscan_api || '', // ???
-    hasSupportAtomicSwap: false,
-  },
-  phpx20: {
-    platform: '',
-    platformKey: '',
-    standard: 'phpx20',
-    value: 'phpx20',
-    currency: 'phpx',
-    explorerApi: config.api?.phpxscan || '', // ???
-    explorerApiKey: config.api?.phpxscan_api || '', // ???
+    explorerApi: config.api?.aurorascan || '',
+    explorerApiKey: config.api?.phi_ApiKey || '',
     hasSupportAtomicSwap: false,
   },
 }

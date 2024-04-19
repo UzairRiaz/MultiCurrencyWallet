@@ -88,11 +88,11 @@ function InputForm(props: InputFormProps) {
     localStorage.setItem('sawBankCardMessage', true)
   }
 
-  const hasFiatAmount = spendedAmount && fromWallet.infoAboutCurrency?.price_fiat
+  const hasFiatAmount = spendedAmount && fromWallet.infoAboutCurrency?.price
   const fiatValue = hasFiatAmount
     && utils.toMeaningfulFloatValue({
       value: spendedAmount,
-      rate: fromWallet.infoAboutCurrency.price_fiat,
+      rate: fromWallet.infoAboutCurrency.price,
     })
 
   const updateBalance = async (direction, wallet) => {
@@ -118,7 +118,7 @@ function InputForm(props: InputFormProps) {
 
     if (!wrongTooltip) {
       return (
-        <span styleName="balanceTooltip">
+        <span styleName="balanceTooltip" className='balance-div'>
           <span styleName="title">
             <FormattedMessage id="partial767" defaultMessage="Balance: " />
           </span>
@@ -231,11 +231,20 @@ function InputForm(props: InputFormProps) {
   const showFiatExchangeBtn = window.transakApiKey
     || supportedCurrencies.includes(spendedCurrency.value)
 
+   const filteredCurrencies =  currencies.filter((currency)=>{
+      return currency?.standard  === 'erc20matic'  
+   });
+
+   const filteredReceivedList = receivedList.filter((currency)=>{
+    return currency?.standard  === 'erc20matic'
+   });
+
   return (
     <form action="">
       <QuickSwapFormTour isTourOpen={isTourOpen} closeTour={closeTour} />
 
-      <div styleName="inputWrapper">
+      <div styleName="inputWrapper" className='you-sell-div'>
+        <label htmlFor="" className='global-label'>You sell</label>
         <SelectGroup
           activeFiat={fiat}
           error={insufficientBalanceA}
@@ -244,7 +253,7 @@ function InputForm(props: InputFormProps) {
           selectedValue={spendedCurrency.value}
           inputId="quickSwapSpendCurrencyInput"
           placeholder="0.00"
-          currencies={currencies}
+          currencies={filteredCurrencies}
           inputToolTip={
             fromBalancePending ? (
               <div styleName="balanceLoader">
@@ -298,7 +307,8 @@ function InputForm(props: InputFormProps) {
         </div>
       </div>
 
-      <div styleName={`inputWrapper ${receivedCurrency.notExist ? 'disabled' : ''}`}>
+      <div styleName={`inputWrapper ${receivedCurrency.notExist ? 'disabled' : ''}`} className="you-receive-div">
+        <label htmlFor="" className='global-label'>You receive</label>
         <SelectGroup
           disabled={!addFirstLiquidity}
           activeFiat={fiat}
@@ -306,7 +316,7 @@ function InputForm(props: InputFormProps) {
           inputValueLink={stateReference.receivedAmount.pipe(handleReceiveAmount)}
           selectedValue={receivedCurrency.value}
           inputId="quickSwapReceiveCurrencyInput"
-          currencies={receivedList}
+          currencies={filteredReceivedList}
           inputToolTip={
             toBalancePending ? (
               <div styleName="balanceLoader">

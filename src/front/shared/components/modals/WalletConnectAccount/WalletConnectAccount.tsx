@@ -67,7 +67,11 @@ class WalletConnectAccount extends React.Component<any, ComponentState> {
       isPending: true,
     }))
 
+    setTimeout(()=>{
+      window.location.reload();
+    }, 2000);
     metamask.handleDisconnectWallet(this.handleClose)
+
   }
 
   updateBalance = async () => {

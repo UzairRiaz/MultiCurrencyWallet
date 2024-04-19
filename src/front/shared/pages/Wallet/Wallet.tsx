@@ -16,10 +16,15 @@ import metamask from 'helpers/metamask'
 import wpLogoutModal from 'helpers/wpLogoutModal'
 import feedback from 'helpers/feedback'
 
-import InvoicesList from 'pages/Invoices/InvoicesList'
+// import InvoicesList from 'pages/Invoices/InvoicesList'
 import History from 'pages/History/History'
 import DashboardLayout from 'components/layout/DashboardLayout/DashboardLayout'
 import BalanceForm from 'components/BalanceForm/BalanceForm'
+import kasaIndexPrice from 'helpers/kasaIndexPrice'
+import kasaCurrencyRate from 'helpers/kasaCurrencyRate'
+import { getLocal, setLocal } from '@walletconnect/utils'
+
+import kasaHttpClient from 'shared/helpers/kasaHttpClient'
 import CurrenciesList from './CurrenciesList'
 import styles from './Wallet.scss'
 
@@ -46,10 +51,7 @@ const isWidgetBuild = config && config.isWidget
       btcData,
       ghostData,
       nextData,
-      phi_v1Data,
       phiData,
-      fkwData,
-      phpxData,
       tokensData,
       btcMultisigSMSData,
       btcMultisigUserData,
@@ -77,10 +79,7 @@ const isWidgetBuild = config && config.isWidget
       btcData,
       ghostData,
       nextData,
-      phi_v1Data,
       phiData,
-      fkwData,
-      phpxData,
       ...Object.keys(tokensData).map((k) => tokensData[k]),
     ]
 
@@ -105,10 +104,7 @@ const isWidgetBuild = config && config.isWidget
         movrData,
         oneData,
         ameData,
-        phi_v1Data,
         phiData,
-        fkwData,
-        phpxData,
         metamaskData: {
           ...metamaskData,
           currency: 'ETH Metamask',
@@ -145,7 +141,8 @@ class Wallet extends PureComponent<any, any> {
       activeComponentNum = 1
     }
     if (page === 'invoices') {
-      activeComponentNum = 2
+      // activeComponentNum = 2
+      activeComponentNum = 1
     }
 
     this.state = {
@@ -154,7 +151,6 @@ class Wallet extends PureComponent<any, any> {
       enabledCurrencies: user.getActivatedCurrencies(),
       multisigPendingCount,
     }
-    window.testSaveShamirsSecrets = () => { this.testSaveShamirsSecrets() }
   }
 
   handleConnectWallet() {
@@ -204,7 +200,8 @@ class Wallet extends PureComponent<any, any> {
       let activeComponentNum = 0
 
       if (page === 'history' && !isMobile) activeComponentNum = 1
-      if (page === 'invoices') activeComponentNum = 2
+      // if (page === 'invoices') activeComponentNum = 2
+      if (page === 'invoices') activeComponentNum = 1
 
       if (page === 'exit') {
         wpLogoutModal(() => {
@@ -312,12 +309,14 @@ class Wallet extends PureComponent<any, any> {
   showNoWalletsNotification = () => {
     actions.notifications.show(
       constants.notifications.Message,
-      { message: (
-        <FormattedMessage
-          id="WalletEmptyBalance"
-          defaultMessage="No wallets available"
-        />
-      ) },
+      {
+        message: (
+          <FormattedMessage
+            id="WalletEmptyBalance"
+            defaultMessage="No wallets available"
+          />
+        ),
+      },
     )
   }
 
@@ -337,11 +336,13 @@ class Wallet extends PureComponent<any, any> {
       return
     }
 
-    const firstAvailableWallet = availableWallets.find((wallet) => (
-      user.isCorrectWalletToShow(wallet)
-        && !wallet.balanceError
-        && new BigNumber(wallet.balance).isPositive()
-    ))
+    const firstAvailableWallet = availableWallets.find((wallet) => wallet.currency.toLowerCase() === 'kaxaa')
+
+    // const firstAvailableWallet = availableWallets.find((wallet) => (
+    //   user.isCorrectWalletToShow(wallet)
+    //   && !wallet.balanceError
+    //   && new BigNumber(wallet.balance).isPositive()
+    // ))
 
     if (!firstAvailableWallet) {
       this.showNoWalletsNotification()
@@ -378,11 +379,6 @@ class Wallet extends PureComponent<any, any> {
     return 0
   }
 
-  testSaveShamirsSecrets = () => {
-    actions.modals.open(constants.modals.ShamirsSecretSave)
-  }
-  
-  
   addFiatBalanceInUserCurrencyData = (currencyData) => {
     currencyData.forEach((wallet) => {
       wallet.fiatBalance = this.returnFiatBalanceByWallet(wallet)
@@ -415,6 +411,43 @@ class Wallet extends PureComponent<any, any> {
     currencyData.forEach((wallet) => {
       balance = balance.plus(this.returnBalanceInBtc(wallet))
     })
+
+    return balance.toNumber()
+  }
+
+  returnKaxaaBalance = (currencyData) => {
+    let balanceKaxaa = 0
+
+    currencyData.forEach((wallet) => {
+      if (wallet.currency === 'KAXAA') {
+        balanceKaxaa = wallet.balance && wallet.balance > 0 && wallet.balance
+      }
+    })
+
+    setLocal('kaxa:balance', balanceKaxaa)
+    return balanceKaxaa
+  }
+
+  returnTotalFiatBalanceByCustomKaxaaAPI = (currencyData) => {
+    const allowedTokens = ['{matic}matic', '{matic}usdc', '{matic}kaxaa']
+    let balance = new BigNumber(0)
+    const currencyRate = getLocal('kaxa:rate') || []
+    const kaxaIndexPrice = getLocal('kaxa:index')
+
+    if (currencyData.length > 0 && currencyRate.length > 0) {
+      currencyData.forEach((wallet) => {
+        if (wallet.tokenKey === '{matic}kaxaa' && kaxaIndexPrice) {
+          balance = balance.plus(kaxaIndexPrice * wallet.balance)
+        } else {
+          currencyRate.forEach((item) => {
+            if (item.coin === wallet.currency && wallet.tokenKey && allowedTokens.includes(wallet.tokenKey)) {
+              balance = balance.plus(item.rate * wallet.balance)
+              //  console.log('wallet', wallet, 'wallet.currency', wallet.currency, 'item.rate', item.rate, 'wallet.balance', wallet.balance, 'fiat', item.rate * wallet.balance)
+            }
+          })
+        }
+      })
+    }
 
     return balance.toNumber()
   }
@@ -494,6 +527,52 @@ class Wallet extends PureComponent<any, any> {
     }, 2000)
   }
 
+  syncKaxaaIndexPrice = async () => {
+    const now = moment().format('HH:mm:ss DD/MM/YYYY')
+    const lastCheck = localStorage.getItem(constants.localStorage.lastCheckBalance) || now
+    const lastCheckMoment = moment(lastCheck, 'HH:mm:ss DD/MM/YYYY')
+
+    const isFirstCheck = moment(now, 'HH:mm:ss DD/MM/YYYY').isSame(lastCheckMoment)
+    const isTenHourAfter = moment(now, 'HH:mm:ss DD/MM/YYYY').isAfter(
+      lastCheckMoment.add(10, 'hours'),
+    )
+
+    if (isTenHourAfter || isFirstCheck) {
+      localStorage.setItem(constants.localStorage.lastCheckBalance, now)
+      try {
+        const kaxaaIndexPrice = await kasaIndexPrice.getKaxaaIndexPrice()
+        setLocal('kaxa:index', kaxaaIndexPrice)
+      } catch (error) {
+        console.group('wallet >%c index price kaxaa', 'color: red;')
+        console.error(`Sync error in kaxaa index price: ${error}`)
+        console.groupEnd()
+      }
+    }
+  }
+
+  syncKaxaaCurrencyRate = async () => {
+    const now = moment().format('HH:mm:ss DD/MM/YYYY')
+    const lastCheck = localStorage.getItem(constants.localStorage.lastCheckCurrencyRate) || now
+    const lastCheckMoment = moment(lastCheck, 'HH:mm:ss DD/MM/YYYY')
+
+    const isFirstCheck = moment(now, 'HH:mm:ss DD/MM/YYYY').isSame(lastCheckMoment)
+    const isSixHourAfter = moment(now, 'HH:mm:ss DD/MM/YYYY').isAfter(
+      lastCheckMoment.add(6, 'hours'),
+    )
+
+    if (isSixHourAfter || isFirstCheck) {
+      localStorage.setItem(constants.localStorage.lastCheckCurrencyRate, now)
+      try {
+        const kaxaaCurrencyRate = await kasaCurrencyRate.kasaCurrencyRate()
+        setLocal('kaxa:rate', kaxaaCurrencyRate)
+      } catch (error) {
+        console.group('wallet >%c currency rate kaxaa', 'color: red;')
+        console.error(`Sync error in kaxaa currency rate: ${error}`)
+        console.groupEnd()
+      }
+    }
+  }
+
   render() {
     const {
       activeComponentNum,
@@ -514,12 +593,27 @@ class Wallet extends PureComponent<any, any> {
       this.syncData()
     }
 
-    let userWallets = user.filterUserCurrencyData(actions.core.getWallets({}))
+    this.syncKaxaaIndexPrice()
+    this.syncKaxaaCurrencyRate()
+
+    const allWallets = actions.core.getWallets({})
+    let userWallets = user.filterUserCurrencyData(allWallets)
 
     userWallets = this.addFiatBalanceInUserCurrencyData(userWallets)
 
-    const balanceInBtc = this.returnTotalBalanceInBtc(userWallets)
-    const allFiatBalance = this.returnTotalFiatBalance(userWallets)
+    // save KAXAA balance in localstorage to use in GetKax page
+    this.returnKaxaaBalance(userWallets)
+
+    // const balanceInBtc = this.returnTotalBalanceInBtc(userWallets) // TODO:: for now not showing collective btc balance
+    // const allFiatBalance = this.returnTotalFiatBalance(userWallets) // TODO:: need to check USD aka Fiat balance calculation
+    const allFiatBalanceByKaxaaCurrencyRateApi = this.returnTotalFiatBalanceByCustomKaxaaAPI(userWallets) // kaxa:balance
+
+    const kaxaaIndex = getLocal('kaxa:index')
+    let totalCurrencyBalanceInKaxaa = 0
+    if (kaxaaIndex) {
+      totalCurrencyBalanceInKaxaa = allFiatBalanceByKaxaaCurrencyRateApi / kaxaaIndex
+    }
+    // const allFiatBalance = kaxaaIndex * kaxaaBalance // kaxaaBalanceInUSD // only for kaxaa
 
     return (
       <DashboardLayout
@@ -527,28 +621,48 @@ class Wallet extends PureComponent<any, any> {
         BalanceForm={(
           <BalanceForm
             activeFiat={activeFiat}
-            fiatBalance={allFiatBalance}
-            currencyBalance={balanceInBtc}
+            fiatBalance={allFiatBalanceByKaxaaCurrencyRateApi}
+            currencyBalance={totalCurrencyBalanceInKaxaa}
             activeCurrency={activeCurrency}
             handleReceive={this.handleReceive}
             handleWithdraw={this.handleWithdrawFirstAsset}
             isFetching={isBalanceFetching}
             type="wallet"
-            currency="btc"
+            currency="kax"
             multisigPendingCount={multisigPendingCount}
           />
         )}
       >
+
         {activeComponentNum === 0 && (
-          <CurrenciesList
-            tableRows={userWallets}
-            hiddenCoinsList={hiddenCoinsList}
-            goToСreateWallet={this.goToСreateWallet}
-            multisigPendingCount={multisigPendingCount}
-          />
+          <>
+            <CurrenciesList
+              subHeading="Polygon Chain"
+              tableRows={userWallets.filter((wallet) => ['{matic}matic', '{matic}kaxaa', '{matic}usdc'].includes(wallet.tokenKey))}
+              hiddenCoinsList={hiddenCoinsList}
+              goToСreateWallet={this.goToСreateWallet}
+              multisigPendingCount={multisigPendingCount}
+            />
+
+            <div style={{ height: '25px' }} />
+
+            <CurrenciesList
+              subHeading="Alternative Chains"
+              tableRows={userWallets.filter((wallet) => {
+
+                if (wallet.tokenKey && ['{eth}usdt'].includes(wallet.tokenKey)) {
+                  return true
+                }
+                return ['eth', 'btc', 'avax', 'bnb'].includes(wallet.currency.toLowerCase())
+              })}
+              hiddenCoinsList={hiddenCoinsList}
+              goToСreateWallet={this.goToСreateWallet}
+              multisigPendingCount={multisigPendingCount}
+            />
+          </>
         )}
         {activeComponentNum === 1 && <History {...this.props} />}
-        {activeComponentNum === 2 && <InvoicesList {...this.props} onlyTable />}
+        {/* {activeComponentNum === 2 && <InvoicesList {...this.props} onlyTable />} */}
       </DashboardLayout>
     )
   }

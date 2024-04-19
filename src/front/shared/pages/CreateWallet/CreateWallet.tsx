@@ -1,5 +1,6 @@
+/* eslint-disable react/no-unknown-property */
 /* eslint-disable no-restricted-syntax */
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import config from 'helpers/externalConfig'
 
 import CSSModules from 'react-css-modules'
@@ -20,6 +21,7 @@ import Button from 'shared/components/controls/Button/Button'
 import { constants, localStorage } from 'helpers'
 import CloseIcon from 'components/ui/CloseIcon/CloseIcon'
 import web3Icons from 'images'
+import Loader from 'components/loaders/Loader/Loader'
 import StepsWrapper from './Steps/StepsWrapper'
 import styles from './CreateWallet.scss'
 
@@ -81,12 +83,12 @@ function CreateWallet(props) {
   const [isExist, setExist] = useState(false)
 
   const goHome = () => {
-    history.push(localisedUrl(locale, links.home))
+    // history.push(localisedUrl(locale, links.wallet))
   }
 
-  const handleConnectWallet = () => {
-    history.push(localisedUrl(locale, links.connectWallet))
-  }
+  // const handleConnectWallet = () => {
+  //   history.push(localisedUrl(locale, links.connectWallet))
+  // }
 
   const handleClick = () => {
     // @ts-ignore: strictNullChecks
@@ -100,21 +102,16 @@ function CreateWallet(props) {
   }
 
   const handleShowMnemonic = () => {
-    actions.modals.open(constants.modals.SaveWalletSelectMethod)
+    actions.modals.open(constants.modals.SaveMnemonicModal)
   }
 
   const handleRestoreMnemonic = () => {
     actions.modals.open(constants.modals.RestoryMnemonicWallet)
   }
 
-  const handleRestoreShamirs = () => {
-    actions.modals.open(constants.modals.ShamirsSecretRestory)
-  }
-
   const validate = () => {
     // @ts-ignore: strictNullChecks
     setError(null)
-
     if (!Object.values(currencies).includes(true) && step === 1) {
       setError('Choose something')
       return
@@ -132,8 +129,6 @@ function CreateWallet(props) {
         actions.core.markCoinAsVisible(standardObj.currency.toUpperCase(), true)
         localStorage.setItem(constants.localStorage.isWalletCreate, true)
 
-        goHome()
-
         actions.modals.open(constants.modals.AddCustomToken, {
           standard: standardName,
           baseCurrency: standardObj.currency,
@@ -150,7 +145,6 @@ function CreateWallet(props) {
         }
       })
       localStorage.setItem(constants.localStorage.isWalletCreate, true)
-      goHome()
       return
     }
 
@@ -249,27 +243,25 @@ function CreateWallet(props) {
   const web3Type = metamask.web3connect.getInjectedType()
   const web3Icon = (web3Icons[web3Type] && web3Type !== `UNKNOWN` && web3Type !== `NONE`) ? web3Icons[web3Type] : false
 
-  const hasExternalWallet = (web3Type == 'NONE' && config.opts.hasWalletConnect) || (web3Type !== 'NONE')
-
   return (
-    <div styleName="wrapper">
-      {userWallets.length ? (
-        <CloseIcon
-          styleName="closeButton"
-          onClick={goHome}
-          data-testid="modalCloseIcon"
-        />
-      ) : null}
+    <>
+      <div styleName="wrapper" style={{ 'display': 'none' }}>
+        {userWallets.length ? (
+          <CloseIcon
+            styleName="closeButton"
+            onClick={goHome}
+            data-testid="modalCloseIcon"
+          />
+        ) : null}
 
-      <div styleName={isMobile ? 'mobileFormBody' : 'formBody'}>
-        <h2>
-          <FormattedMessage id="createWalletHeader1" defaultMessage="Создание кошелька" />
-          {' '}
-          {forcedCurrency && forcedCurrency.toUpperCase()}
-        </h2>
-        <div styleName="buttonWrapper">
-          {!noInternalWallet && (
-            <>
+        <div styleName={isMobile ? 'mobileFormBody' : 'formBody'}>
+          <h2>
+            <FormattedMessage id="createWalletHeader1" defaultMessage="Создание кошелька" />
+            {' '}
+            {forcedCurrency && forcedCurrency.toUpperCase()}
+          </h2>
+          <div styleName="buttonWrapper">
+            {!noInternalWallet && (
               <div>
                 <button onClick={handleRestoreMnemonic} type="button">
                   <FormattedMessage id="ImportKeys_RestoreMnemonic" defaultMessage="Restore from 12-word seed" />
@@ -292,80 +284,60 @@ function CreateWallet(props) {
                   </span>
                 </Tooltip>
               </div>
-              <div>
-                <button onClick={handleRestoreShamirs} type="button">
-                  <FormattedMessage id="ImportKeys_RestoreShamirs" defaultMessage="Restore from Secret-Sharing" />
-                </button>
-                &nbsp;
-                <Tooltip id="ImportKeys_RestoreShamirsc_tooltip">
-                  <span>
-                    <FormattedMessage
-                      id="ImportKeys_RestoreShamirs_Tooltip"
-                      defaultMessage="Shamir's Secret-Sharing for Mnemonic Codes"
-                    />
-                    <br />
-                    <br />
-                    <div styleName="alertTooltipWrapper">
-                      <FormattedMessage
-                        id="ImportKeys_RestoreShamirs_Tooltip_withBalance"
-                        defaultMessage="Please, be causious!"
-                      />
-                    </div>
-                  </span>
-                </Tooltip>
-              </div>
-            </>
-          )}
-          {hasExternalWallet && (
-            <>
-              {!metamask.isConnected() && (
-                <div>
-                  <button onClick={handleConnectWallet} type="button">
-                    {web3Icon && (
-                      <img styleName="connectWalletIcon" src={web3Icon} />
-                    )}
-                    <FormattedMessage id="ImportKeys_ConnectWallet" defaultMessage="Connect Wallet" />
-                  </button>
-                  &nbsp;
-                  <Tooltip id="CreateWallet_ConnectWalletTooltip">
-                    <FormattedMessage
-                      id="CreateWallet_ConnectWalletButton"
-                      defaultMessage="Use this if you already have ethereum wallet"
-                    />
-                  </Tooltip>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            )}
+            {/* {!metamask.isConnected() && (
+            <div>
+              <button onClick={handleConnectWallet} type="button">
+                {web3Icon && (
+                  <img styleName="connectWalletIcon" src={web3Icon} />
+                )}
+                <FormattedMessage id="ImportKeys_ConnectWallet" defaultMessage="Connect Wallet" />
+              </button>
+              &nbsp;
+              <Tooltip id="CreateWallet_ConnectWalletTooltip">
+                <FormattedMessage
+                  id="CreateWallet_ConnectWalletButton"
+                  defaultMessage="Use this if you already have ethereum wallet"
+                />
+              </Tooltip>
+            </div>
+          )} */}
+          </div>
 
-        {
-          addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase
-            ? (
-              <div style={{ display: 'flex', justifyContent: 'center', width: '60%', margin: 'auto' }}>
-                <Button blue fullWidth onClick={handleShowMnemonic}>
-                  <FormattedMessage
-                    id="BTCMS_SaveMnemonicButton"
-                    defaultMessage="Save secret phrase"
-                  />
-                </Button>
-              </div>
-            )
-            : (
-              <StepsWrapper
-                step={step}
-                forcedCurrencyData={forcedCurrencyData}
-                error={error}
-                onClick={validate}
-                setError={setError}
-                btcData={btcData}
-                currenciesForSecondStep={currencies}
-                showPinContent={hash === '#pin'}
-              />
-            )
-        }
+          {
+            addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase
+              ? (
+                <div style={{ display: 'flex', justifyContent: 'center', width: '60%', margin: 'auto' }}>
+                  <Button blue fullWidth onClick={handleShowMnemonic}>
+                    <FormattedMessage
+                      id="BTCMS_SaveMnemonicButton"
+                      defaultMessage="Save secret phrase"
+                    />
+                  </Button>
+                </div>
+              )
+              : (
+                <StepsWrapper
+                  step={step}
+                  forcedCurrencyData={forcedCurrencyData}
+                  error={error}
+                  onClick={validate}
+                  setError={setError}
+                  btcData={btcData}
+                  currenciesForSecondStep={currencies}
+                  showPinContent={hash === '#pin'}
+                />
+              )
+          }
+        </div>
       </div>
-    </div>
+
+      <Loader
+        showMyOwnTip={
+          <FormattedMessage id="RedirectToWallet" defaultMessage="Connecting to Kaxaa Wallet..." />
+        }
+      />
+    </>
   )
 }
 export default connect({

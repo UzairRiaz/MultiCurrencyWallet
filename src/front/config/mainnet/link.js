@@ -14,8 +14,5 @@ export default {
   oneExplorer: 'https://explorer.harmony.one',
   amescan: 'https://amescan.io',
   auroraExplorer: 'https://aurorascan.dev',
-  phi_v1Explorer: 'https://explorer.phi.network',
-  phi_Explorer: 'https://phiscan.com',
-  fkw_Explorer: 'https://explorer.fokawa.com',
-  phpx_Explorer: 'https://explorer.phpx.network',
+  phiExplorer: 'https://explorer.phi.network',
 }

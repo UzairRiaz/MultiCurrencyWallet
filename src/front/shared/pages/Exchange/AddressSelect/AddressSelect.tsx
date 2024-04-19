@@ -2,17 +2,15 @@ import React, { Component, Fragment } from 'react'
 import { withRouter } from 'react-router-dom'
 import Link from 'local_modules/sw-valuelink'
 
-import styles from './AddressSelect.scss'
 import cssModules from 'react-css-modules'
 import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import Input from 'components/forms/Input/Input'
 import DropDown from 'components/ui/DropDown'
 import Address from 'components/ui/Address/Address'
-import { AddressFormat } from 'domain/address'
+import { AddressFormat, AddressType, AddressRole } from 'domain/address'
 import metamask from 'helpers/metamask'
 import { Button } from 'components/controls'
 import erc20Like from 'common/erc20Like'
-import Option from './Option/Option'
 import { links } from 'helpers'
 import { isAllowedCurrency } from 'helpers/user'
 import actions from 'redux/actions'
@@ -26,11 +24,11 @@ import iconCustom from 'images/custom.svg'
 import getCoinInfo from 'common/coins/getCoinInfo'
 import config from 'helpers/externalConfig'
 
-
-import { AddressType, AddressRole } from 'domain/address'
 import { COIN_DATA, COIN_MODEL } from 'swap.app/constants/COINS'
+import Option from './Option/Option'
+import styles from './AddressSelect.scss'
 
-const disableInternalWallet = (config?.opts?.ui?.disableInternalWallet) ? true : false
+const disableInternalWallet = !!(config?.opts?.ui?.disableInternalWallet)
 const langLabels = defineMessages({
   labelSpecifyAddress: {
     id: 'Exchange_SpecifyAddress',
@@ -101,8 +99,6 @@ type AddressSelectState = {
   dropDownOptions: Array<DropDownOptions>
 }
 
-
-
 @withRouter
 @cssModules(styles, { allowMultiple: true })
 class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
@@ -118,15 +114,13 @@ class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
       selectedType: selectedType || 'Internal',
       walletAddressFocused: false,
       isMetamaskConnected: metamask.isConnected(),
-      metamaskAddress: metamask.getAddress()|| '',
+      metamaskAddress: metamask.getAddress() || '',
       isScanActive: false,
       dropDownOptions: [],
     }
   }
 
-  getTicker = () => {
-    return this.props.currency.toUpperCase()
-  }
+  getTicker = () => this.props.currency.toUpperCase()
 
   getInternalAddress = () => {
     const { currency } = this.props
@@ -172,14 +166,14 @@ class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
   componentDidUpdate(prevProps) {
     const { currency: newCurrency, selectedType, hasError = false, balance } = this.props
 
-    const {balance: oldBalance} = prevProps
+    const { balance: oldBalance } = prevProps
 
     const {
       currency: oldCurrency,
       hasError: oldHasError = false,
     } = this.state
 
-    if(!isNaN(Number(oldBalance)) && !isNaN(Number(balance)) && oldBalance !== balance){
+    if (!isNaN(Number(oldBalance)) && !isNaN(Number(balance)) && oldBalance !== balance) {
       this.prepareDropDownOptions(selectedType)
     }
 
@@ -235,7 +229,7 @@ class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
               type: AddressType.Metamask,
               value: metamask.getAddress(),
             })
-          }
+          },
         )
       }).catch((error) => {
         console.error('Metamask rejected', error)
@@ -301,7 +295,7 @@ class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
             value,
           })
         }
-      }
+      },
     )
   }
 
@@ -351,8 +345,7 @@ class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
       internalBalance = balance
     }
 
-    const isInternalOptionDisabled =
-      role === AddressRole.Send && (!internalBalance || internalBalance === 0)
+    const isInternalOptionDisabled =      role === AddressRole.Send && (!internalBalance || internalBalance === 0)
 
     const isMetamaskOption = erc20Like.isToken({ name: currency }) || ['ETH', 'BNB', 'MATIC'].includes(ticker) // ToDo: replace at constant
 
@@ -379,14 +372,14 @@ class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
             value: AddressType.Internal,
             icon: iconInternal,
             title: !isInternalOptionDisabled ? (
-              <Fragment>
+              <>
                 <FormattedMessage {...langLabels.optionInternal} />
                 <Address
                   address={this.getInternalAddress()}
                   format={AddressFormat.Short}
                   type={AddressType.Internal}
                 />
-              </Fragment>
+              </>
             ) : (
               <FormattedMessage {...langLabels.optionInternalDisabled} />
             ),
@@ -411,14 +404,14 @@ class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
             value: AddressType.Metamask,
             icon: web3Icon,
             title: (
-              <Fragment>
+              <>
                 {metamask.web3connect.getProviderTitle()}
                 <Address
                   address={metamaskAddress}
                   format={AddressFormat.Short}
                   type={AddressType.Metamask}
                 />
-              </Fragment>
+              </>
             ),
           },
         )
@@ -474,7 +467,6 @@ class AddressSelect extends Component<AddressSelectProps, AddressSelectState> {
 
     const isUTXOModel = COIN_DATA[ticker] && COIN_DATA[ticker].model === COIN_MODEL.UTXO
     const isCustomOptionInputHidden = role === AddressRole.Send && isUTXOModel
-
 
     // =======================================================
 

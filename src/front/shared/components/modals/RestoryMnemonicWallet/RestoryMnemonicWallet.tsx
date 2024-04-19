@@ -3,24 +3,31 @@ import { BigNumber } from 'bignumber.js'
 import { constants } from 'helpers'
 import actions from 'redux/actions'
 import config from 'app-config'
+import { getActivatedCurrencies } from 'helpers/user'
 
 import cssModules from 'react-css-modules'
 
-import defaultStyles from '../Styles/default.scss'
-import styles from './RestoryMnemonicWallet.scss'
 import okSvg from 'shared/images/ok.svg'
 import * as mnemonicUtils from 'common/utils/mnemonic'
 import Modal from 'components/modal/Modal/Modal'
 import FieldLabel from 'components/forms/FieldLabel/FieldLabel'
 import Button from 'components/controls/Button/Button'
 import Tooltip from 'components/ui/Tooltip/Tooltip'
-import { FormattedMessage, injectIntl, defineMessages } from 'react-intl'
+import { FormattedMessage, injectIntl, defineMessages, useIntl } from 'react-intl'
 
 import links from 'helpers/links'
 
 import MnemonicInput from 'components/forms/MnemonicInput/MnemonicInput'
 import feedback from 'shared/helpers/feedback'
+import kasaHttpClient from 'helpers/kasaHttpClient'
 
+import EncryptRsa from 'encrypt-rsa'
+import appConfig from 'app-config'
+import Loader from 'components/loaders/Loader/Loader'
+import styles from './RestoryMnemonicWallet.scss'
+import defaultStyles from '../Styles/default.scss'
+
+const addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase = config?.opts?.addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase
 
 const langPrefix = `RestoryMnemonicWallet`
 const langLabels = defineMessages({
@@ -78,9 +85,9 @@ type ComponentState = {
 
 @cssModules({ ...defaultStyles, ...styles }, { allowMultiple: true })
 class RestoryMnemonicWallet extends React.Component<ComponentProps, ComponentState> {
+
   constructor(props) {
     super(props)
-
     this.state = {
       step: `enter`,
       mnemonic: '',
@@ -90,7 +97,40 @@ class RestoryMnemonicWallet extends React.Component<ComponentProps, ComponentSta
   }
 
   componentDidMount() {
+
+    if (localStorage.getItem('walletHasBeenRestored') === 'true') {
+      window.location.href = '#wallet'
+      return;
+    }
+
     feedback.restore.started()
+
+    this.saveMnemonics()
+  }
+
+  saveMnemonics = () => {
+    const mnemonics = (localStorage.getItem('testnet:twentywords'))
+
+    const thisContext = this
+    kasaHttpClient.get('wallet/secret-string').then(response => {
+      if (response.data.secrets) {
+        const { secrets } = response.data
+        const plainMnemonic = this.decryptMnemonic(secrets)
+        thisContext.setState((state, props) => ({ mnemonic: plainMnemonic }))
+        this.handleRestoryWallet()
+      } else {
+        // window.location.href = '#createWallet';
+      }
+    })
+  }
+
+  decryptMnemonic = (mnemonic) => {
+    const encryptRsa = new EncryptRsa()
+
+    return encryptRsa.decryptStringWithRsaPrivateKey({
+      text: mnemonic,
+      privateKey: appConfig.kaxa.rsaPvtKey,
+    })
   }
 
   handleClose = () => {
@@ -141,13 +181,84 @@ class RestoryMnemonicWallet extends React.Component<ComponentProps, ComponentSta
   restoreWallet = (mnemonic) => {
     // callback in timeout doesn't block ui
     setTimeout(async () => {
-      await actions.user.restoreWallet(mnemonic)
+      // Backup critical localStorage
+      const backupMark = actions.btc.getMainPublicKey()
+
+      actions.backupManager.backup(backupMark, false, true)
+      // clean mnemonic, if exists
+      localStorage.setItem(constants.privateKeyNames.twentywords, '-')
+
+      const btcWallet = await actions.btc.getWalletByWords(mnemonic)
+      // Check - if exists backup for this mnemonic
+      const restoryMark = btcWallet.publicKey
+
+      if (actions.backupManager.exists(restoryMark)) {
+        actions.backupManager.restory(restoryMark)
+      }
+
+      localStorage.setItem(constants.localStorage.isWalletCreate, 'true')
+
+      Object.keys(config.enabledEvmNetworks).forEach(async (evmNetworkKey) => {
+        const actionKey = evmNetworkKey?.toLowerCase()
+        if (actionKey) await actions[actionKey]?.login(false, mnemonic)
+      })
+
+      await actions.ghost.login(false, mnemonic)
+      await actions.next.login(false, mnemonic)
+
+      if (!addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase) {
+        const btcPrivKey = await actions.btc.login(false, mnemonic)
+        const btcPubKey = actions.btcmultisig.getSmsKeyFromMnemonic(mnemonic)
+        // @ts-ignore: strictNullChecks
+        localStorage.setItem(constants.privateKeyNames.btcSmsMnemonicKeyGenerated, btcPubKey)
+        // @ts-ignore: strictNullChecks
+        localStorage.setItem(constants.privateKeyNames.btcPinMnemonicKey, btcPubKey)
+        await actions.user.sign_btc_2fa(btcPrivKey)
+        await actions.user.sign_btc_multisig(btcPrivKey)
+      }
+
+      // actions.core.markCoinAsVisible('BTC', true)
+
+      const result: any = await actions.btcmultisig.isPinRegistered(mnemonic)
+
+      if (result?.exist) {
+        actions.core.markCoinAsVisible('BTC (PIN-Protected)', true)
+      }
+
+      if (addAllEnabledWalletsAfterRestoreOrCreateSeedPhrase) {
+
+        const currencies = getActivatedCurrencies()
+        currencies.forEach((currency) => {
+          if (
+            currency !== 'BTC (PIN-Protected)'
+          ) {
+            actions.core.markCoinAsVisible(currency.toUpperCase(), true)
+          }
+        })
+
+      } else {
+
+        await actions.user.getBalances()
+        const allWallets = actions.core.getWallets({ withInternal: true })
+        allWallets.forEach((wallet) => {
+          if (new BigNumber(wallet.balance).isGreaterThan(0)) {
+            actions.core.markCoinAsVisible(
+              wallet.isToken ? wallet.tokenKey.toUpperCase() : wallet.currency,
+              true,
+            )
+          }
+        })
+      }
+
       this.setState(() => ({
         isFetching: false,
         step: `ready`,
       }))
 
       feedback.restore.finished()
+
+      localStorage.setItem('walletHasBeenRestored', 'true')
+      window.location.reload()
     })
   }
 
@@ -167,16 +278,23 @@ class RestoryMnemonicWallet extends React.Component<ComponentProps, ComponentSta
       isFetching,
     } = this.state
 
+    return  (
+      <Loader
+        showMyOwnTip={
+          <FormattedMessage id="RedirectToWallet" defaultMessage="Connecting to Kaxaa Wallet..." />
+        }
+      />
+    )
     return (
       <Modal
         name={name}
         title={`${intl.formatMessage(langLabels.title)}`}
         onClose={this.handleClose}
-        showCloseButton={true}
+        showCloseButton
       >
         <div styleName="restoreModalHolder">
           {step === `enter` && (
-            <Fragment>
+            <>
               {mnemonic && mnemonicIsInvalid && (
                 <div styleName="rednotes mnemonicNotice">
                   <FormattedMessage {...langLabels.mnemonicInvalid} />
@@ -205,17 +323,17 @@ class RestoryMnemonicWallet extends React.Component<ComponentProps, ComponentSta
                     </Tooltip>
                   </span>
                 </FieldLabel>
-                <MnemonicInput 
+                <MnemonicInput
                   autoFill={config.entry === 'testnet'}
                   onChange={this.handleMnemonicChange}
                 />
               </div>
               <div styleName="buttonsHolder">
-                <Button gray onClick={this.handleClose}>
+                <Button blue onClick={this.handleClose}>
                   <FormattedMessage {...langLabels.cancelRestory} />
                 </Button>
                 <Button
-                  id='walletRecoveryButton'
+                  id="walletRecoveryButton"
                   blue
                   disabled={!mnemonic || mnemonic.split(' ').length !== 12 || isFetching}
                   onClick={this.handleRestoryWallet}
@@ -227,17 +345,17 @@ class RestoryMnemonicWallet extends React.Component<ComponentProps, ComponentSta
                   )}
                 </Button>
               </div>
-            </Fragment>
+            </>
           )}
           {step === `ready` && (
-            <Fragment>
+            <>
               <p styleName="notice mnemonicNotice">
                 <img styleName="finishImg" src={okSvg} alt="finish" />
                 <FormattedMessage {...langLabels.readyNotice} />
               </p>
               <div styleName="lowLevel">
                 <Button
-                  id='finishWalletRecoveryButton'
+                  id="finishWalletRecoveryButton"
                   styleName="buttonCenter buttonHalfFullWidth"
                   blue
                   onClick={this.handleFinish}
@@ -245,7 +363,7 @@ class RestoryMnemonicWallet extends React.Component<ComponentProps, ComponentSta
                   <FormattedMessage {...langLabels.Ready} />
                 </Button>
               </div>
-            </Fragment>
+            </>
           )}
         </div>
       </Modal>
